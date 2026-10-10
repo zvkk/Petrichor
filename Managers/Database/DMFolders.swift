@@ -592,6 +592,21 @@ extension DatabaseManager {
         }
     }
 
+    /// A matching filesystem hash does not guarantee that the database is current.
+    /// Check every indexed path, including duplicates hidden from library views.
+    func folderContainsMissingTracks(_ folderId: Int64) async throws -> Bool {
+        let paths = try await dbQueue.read { db in
+            try String.fetchAll(
+                db,
+                sql: "SELECT path FROM tracks WHERE folder_id = ?",
+                arguments: [folderId]
+            )
+        }
+        // This only requests a scan. Its complete-enumeration check still protects
+        // tracks when a volume or part of the folder is temporarily unreadable.
+        return paths.contains { !FileManager.default.fileExists(atPath: $0) }
+    }
+
     func scanSingleFolder(
         _ folder: Folder,
         supportedExtensions: [String],
@@ -818,7 +833,13 @@ extension DatabaseManager {
         hasRemainingFiles: Bool,
         globalScanState: GlobalScanState? = nil
     ) async throws {
-        let existingTracks = getTracksForFolder(folderId)
+        // Maintenance must not use the presentation query, which hides duplicates
+        // and turns database-read failures into an empty result.
+        let existingTracks = try await dbQueue.read { db in
+            try Track.select(Track.lightweightSelection)
+                .filter(Track.Columns.folderId == folderId)
+                .fetchAll(db)
+        }
         let foundPathStrings = Set(foundPaths.map { $0.path })
         let tracksToRemove = existingTracks.filter { !foundPathStrings.contains($0.url.path) }
         let trackIdsToRemove = tracksToRemove.compactMap { $0.trackId }

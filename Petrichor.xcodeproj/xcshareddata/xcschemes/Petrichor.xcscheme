@@ -27,8 +27,19 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
+      shouldUseLaunchSchemeArgsEnv = "NO"
       shouldAutocreateTestPlan = "YES">
+      <MacroExpansion>
+         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="550F4A0D2DB45B1A005F794E" BuildableName="Petrichor Dev.app" BlueprintName="Petrichor" ReferencedContainer="container:Petrichor.xcodeproj"/>
+      </MacroExpansion>
+      <EnvironmentVariables>
+         <EnvironmentVariable key="PETRICHOR_REGRESSION_DATABASE" value="$(PETRICHOR_REGRESSION_DATABASE)" isEnabled="YES"/>
+      </EnvironmentVariables>
+      <Testables>
+         <TestableReference skipped="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="9A2026101000000000000001" BuildableName="PetrichorTests.xctest" BlueprintName="PetrichorTests" ReferencedContainer="container:Petrichor.xcodeproj"/>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

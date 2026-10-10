@@ -21,25 +21,33 @@ class DatabaseManager: ObservableObject {
 
     // MARK: - Initialization
 
-    init() throws {
-        // Create database in app support directory
-        let appSupport = try FileManager.default.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )
-        // Use bundle identifier as the folder name
-        let bundleID = Bundle.main.bundleIdentifier ?? About.bundleIdentifier
-        let appDirectory = appSupport.appendingPathComponent(bundleID, isDirectory: true)
+    init(databaseURL: URL? = nil) throws {
+        if let databaseURL {
+            try FileManager.default.createDirectory(
+                at: databaseURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            dbPath = databaseURL.path
+        } else {
+            // Create database in app support directory
+            let appSupport = try FileManager.default.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            )
+            // Use bundle identifier as the folder name
+            let bundleID = Bundle.main.bundleIdentifier ?? About.bundleIdentifier
+            let appDirectory = appSupport.appendingPathComponent(bundleID, isDirectory: true)
 
-        // Create directory if it doesn't exist
-        try FileManager.default.createDirectory(at: appDirectory,
-                                                withIntermediateDirectories: true,
-                                                attributes: nil)
+            // Create directory if it doesn't exist
+            try FileManager.default.createDirectory(at: appDirectory,
+                                                    withIntermediateDirectories: true,
+                                                    attributes: nil)
 
-        let dbFilename = bundleID.hasSuffix(".debug") ? "petrichor-debug.db" : "petrichor.db"
-        dbPath = appDirectory.appendingPathComponent(dbFilename).path
+            let dbFilename = bundleID.hasSuffix(".debug") ? "petrichor-debug.db" : "petrichor.db"
+            dbPath = appDirectory.appendingPathComponent(dbFilename).path
+        }
 
         // Configure database before creating the queue
         var config = Configuration()

@@ -425,7 +425,7 @@ extension LibraryManager {
         }
     }
 
-    private func determineFoldersToRefresh(
+    internal func determineFoldersToRefresh(
         hardRefresh: Bool = false
     ) async -> (folders: [Folder], unavailableFolderNames: [String]) {
         var foldersToRefresh: [Folder] = []
@@ -457,6 +457,21 @@ extension LibraryManager {
 
             if timestampChanged {
                 Logger.info("Folder \(scanFolder.name): Timestamp changed, marking for refresh")
+                foldersToRefresh.append(scanFolder)
+                continue
+            }
+
+            // Older refreshes could leave hidden duplicates behind while saving
+            // the new filesystem hash. Recover those entries on a normal refresh.
+            do {
+                if let folderId = scanFolder.id,
+                   try await databaseManager.folderContainsMissingTracks(folderId) {
+                    Logger.info("Folder \(scanFolder.name): Missing indexed tracks, marking for refresh")
+                    foldersToRefresh.append(scanFolder)
+                    continue
+                }
+            } catch {
+                Logger.warning("Folder \(scanFolder.name): Failed to check indexed tracks, marking for refresh: \(error)")
                 foldersToRefresh.append(scanFolder)
                 continue
             }

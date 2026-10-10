@@ -118,10 +118,10 @@ class LibraryManager: ObservableObject {
     }
 
     // MARK: - Initialization
-    init() {
+    init(databaseManager injectedDatabaseManager: DatabaseManager? = nil, startBackgroundTasks: Bool = true) {
         do {
             // Initialize database manager
-            databaseManager = try DatabaseManager()
+            databaseManager = try injectedDatabaseManager ?? DatabaseManager()
         } catch {
             Logger.critical("Failed to initialize database: \(error)")
             fatalError("Failed to initialize database: \(error)")
@@ -139,6 +139,8 @@ class LibraryManager: ObservableObject {
         loadMusicLibrary()
         
         pinnedItems = databaseManager.getPinnedItemsSync()
+
+        guard startBackgroundTasks else { return }
         
         Task {
             try? await Task.sleep(nanoseconds: TimeConstants.fiftyMilliseconds)

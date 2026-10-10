@@ -2,7 +2,7 @@
 
 | App | Build | Bundle identity | Library |
 | --- | --- | --- | --- |
-| Petrichor Stable | Release, pinned at `local-stable-v1` | `org.Petrichor.zak.stable` | Its own sandbox container |
+| Petrichor Stable | Release, pinned at `local-stable-v2` | `org.Petrichor.zak.stable` | Its own sandbox container |
 | Petrichor Dev | Debug, development checkout | `org.Petrichor.zak.debug` | Its own sandbox container |
 
 The original `org.Petrichor` app remains separate. Both local apps have distinct
@@ -26,7 +26,7 @@ The development icon differs from the Stable app's normal icon.
 
 ## Stable
 
-The Stable checkout is `.worktrees/stable`, detached at `local-stable-v1`.
+The Stable checkout is `.worktrees/stable`, detached at `local-stable-v2`.
 The build script refuses to build Stable from a different commit or with tracked
 source changes. To reproduce the installed Stable app:
 

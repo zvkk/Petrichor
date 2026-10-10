@@ -13,7 +13,7 @@ case "$flavor" in
         app_name="Petrichor Stable"
         bundle_id="org.Petrichor.zak.stable"
         url_scheme="petrichor-zak-stable"
-        stable_ref="$(git -C "$script_root" rev-parse local-stable-v1)"
+        stable_ref="$(git -C "$script_root" rev-parse local-stable-v2)"
         current_ref="$(git -C "$script_root" rev-parse HEAD)"
         if [ "$current_ref" != "$stable_ref" ]; then
             echo "Build Stable from the pinned checkout: $common_root/.worktrees/stable" >&2
@@ -47,12 +47,10 @@ xcodebuild build \
     -derivedDataPath "$build_root/$flavor" \
     -clonedSourcePackagesDirPath "$build_root/SourcePackages" \
     -onlyUsePackageVersionsFromResolvedFile \
-    PRODUCT_NAME="$app_name" PRODUCT_MODULE_NAME=Petrichor \
-    INFOPLIST_KEY_CFBundleDisplayName="$app_name" \
-    PRODUCT_BUNDLE_IDENTIFIER="$bundle_id" PETRICHOR_URL_SCHEME="$url_scheme" \
+    PETRICHOR_APP_NAME="$app_name" PETRICHOR_BUNDLE_ID="$bundle_id" \
+    PETRICHOR_URL_SCHEME="$url_scheme" \
     CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
-    'CODE_SIGN_IDENTITY[sdk=macosx*]=-' 'DEVELOPMENT_TEAM[sdk=macosx*]=' \
-    OTHER_CODE_SIGN_FLAGS=--timestamp=none 'OTHER_CODE_SIGN_FLAGS[sdk=*]=--timestamp=none'
+    OTHER_CODE_SIGN_FLAGS=--timestamp=none
 
 app_path="$build_root/$flavor/Build/Products/$configuration/$app_name.app"
 codesign --verify --deep --strict "$app_path"

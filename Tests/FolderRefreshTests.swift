@@ -178,9 +178,19 @@ final class FolderRefreshTests: XCTestCase {
         let actualData = Dictionary(uniqueKeysWithValues: after.map { row in
             (row.id, row.userData)
         })
-        XCTAssertEqual(actualData, expectedData)
+        // Refresh can also discover valid files added since the snapshot.
+        let changedExistingIDs = expectedData.keys.filter { actualData[$0] != expectedData[$0] }
+        XCTAssertTrue(changedExistingIDs.isEmpty, "Existing track data changed: \(changedExistingIDs)")
         XCTAssertTrue(after.allSatisfy { FileManager.default.fileExists(atPath: $0.path) })
         print("Copied library refresh: \(before.count) -> \(after.count) indexed tracks; missing files: 0")
+        if let outputPath = ProcessInfo.processInfo.environment["PETRICHOR_REGRESSION_OUTPUT"],
+           !outputPath.isEmpty, !outputPath.hasPrefix("$(") {
+            guard !FileManager.default.fileExists(atPath: outputPath) else {
+                throw CocoaError(.fileWriteFileExists)
+            }
+            let output = try DatabaseQueue(path: outputPath)
+            try manager.dbQueue.backup(to: output)
+        }
     }
 
     private func addTrack(_ name: String, exists: Bool, duplicate: Bool = false) throws -> Int64 {

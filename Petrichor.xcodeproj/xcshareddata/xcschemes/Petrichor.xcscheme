@@ -34,6 +34,7 @@
       </MacroExpansion>
       <EnvironmentVariables>
          <EnvironmentVariable key="PETRICHOR_REGRESSION_DATABASE" value="$(PETRICHOR_REGRESSION_DATABASE)" isEnabled="YES"/>
+         <EnvironmentVariable key="PETRICHOR_REGRESSION_OUTPUT" value="$(PETRICHOR_REGRESSION_OUTPUT)" isEnabled="YES"/>
       </EnvironmentVariables>
       <Testables>
          <TestableReference skipped="NO">

@@ -13,7 +13,7 @@ case "$flavor" in
         app_name="Petrichor Stable"
         bundle_id="org.Petrichor.zak.stable"
         url_scheme="petrichor-zak-stable"
-        stable_ref="$(git -C "$script_root" rev-parse local-stable-v2)"
+        stable_ref="$(git -C "$script_root" rev-parse local-stable-v3)"
         current_ref="$(git -C "$script_root" rev-parse HEAD)"
         if [ "$current_ref" != "$stable_ref" ]; then
             echo "Build Stable from the pinned checkout: $common_root/.worktrees/stable" >&2
@@ -50,6 +50,7 @@ xcodebuild build \
     PETRICHOR_APP_NAME="$app_name" PETRICHOR_BUNDLE_ID="$bundle_id" \
     PETRICHOR_URL_SCHEME="$url_scheme" \
     CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
+    ENABLE_HARDENED_RUNTIME=NO \
     OTHER_CODE_SIGN_FLAGS=--timestamp=none
 
 app_path="$build_root/$flavor/Build/Products/$configuration/$app_name.app"

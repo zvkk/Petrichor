@@ -2,7 +2,7 @@
 
 | App | Build | Bundle identity | Library |
 | --- | --- | --- | --- |
-| Petrichor Stable | Release, pinned at `local-stable-v2` | `org.Petrichor.zak.stable` | Its own sandbox container |
+| Petrichor Stable | Release, pinned at `local-stable-v3` | `org.Petrichor.zak.stable` | Its own sandbox container |
 | Petrichor Dev | Debug, development checkout | `org.Petrichor.zak.debug` | Its own sandbox container |
 
 The original `org.Petrichor` app remains separate. Both local apps have distinct
@@ -10,7 +10,10 @@ URL schemes, preferences, logs, playback sessions, library databases, and Last.f
 credential keys. Last.fm sign-in is independent for each app.
 Upstream automatic updates are disabled by the existing non-production identity
 check, so they cannot replace the local fixes. These are locally signed builds;
-each app needs its own permission to read a watched music folder.
+each app needs its own permission to read a watched music folder. The sandbox
+stays enabled. Hardened-runtime library validation is disabled for these local
+ad hoc signatures because bundled vendor frameworks carry different signing
+team identities.
 
 ## Development
 
@@ -27,7 +30,7 @@ The development icon differs from the Stable app's normal icon.
 
 ## Stable
 
-The Stable checkout is `.worktrees/stable`, detached at `local-stable-v2`.
+The Stable checkout is `.worktrees/stable`, detached at `local-stable-v3`.
 The build script refuses to build Stable from a different commit or with tracked
 source changes. To reproduce the installed Stable app:
 

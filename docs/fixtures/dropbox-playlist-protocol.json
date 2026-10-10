@@ -1,0 +1,821 @@
+{
+  "protocolVersion": 1,
+  "libraryId": "00000001-0000-4000-8000-000000000001",
+  "playlistId": "00000002-0000-4000-8000-000000000002",
+  "revisions": {
+    "initial": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000003-0000-4000-8000-000000000003",
+      "parentRevisionIds": [],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Warmup",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "rename": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000005-0000-4000-8000-000000000005",
+      "parentRevisionIds": [
+        "00000003-0000-4000-8000-000000000003"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Warmup revised",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "fork": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000006-0000-4000-8000-000000000006",
+      "parentRevisionIds": [
+        "00000003-0000-4000-8000-000000000003"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Phone edit",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "delete": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000007-0000-4000-8000-000000000007",
+      "parentRevisionIds": [
+        "00000005-0000-4000-8000-000000000005"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Warmup",
+      "deleted": true,
+      "tracks": []
+    },
+    "resolution": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000008-0000-4000-8000-000000000008",
+      "parentRevisionIds": [
+        "00000005-0000-4000-8000-000000000005",
+        "00000006-0000-4000-8000-000000000006"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Chosen version",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "missingParent": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000009-0000-4000-8000-000000000009",
+      "parentRevisionIds": [
+        "0000000a-0000-4000-8000-00000000000a"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Warmup",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "lateParent": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "0000000a-0000-4000-8000-00000000000a",
+      "parentRevisionIds": [
+        "00000003-0000-4000-8000-000000000003"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Warmup",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "unicode": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "0000000b-0000-4000-8000-00000000000b",
+      "parentRevisionIds": [
+        "00000003-0000-4000-8000-000000000003"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "夜の音 🎵",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:unicode"
+        }
+      ]
+    }
+  },
+  "validationCases": [
+    {
+      "name": "initial",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "rename",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000005-0000-4000-8000-000000000005",
+        "parentRevisionIds": [
+          "00000003-0000-4000-8000-000000000003"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup revised",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fork",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000006-0000-4000-8000-000000000006",
+        "parentRevisionIds": [
+          "00000003-0000-4000-8000-000000000003"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Phone edit",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "delete",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000007-0000-4000-8000-000000000007",
+        "parentRevisionIds": [
+          "00000005-0000-4000-8000-000000000005"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": true,
+        "tracks": []
+      }
+    },
+    {
+      "name": "resolution",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000008-0000-4000-8000-000000000008",
+        "parentRevisionIds": [
+          "00000005-0000-4000-8000-000000000005",
+          "00000006-0000-4000-8000-000000000006"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Chosen version",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missingParent",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000009-0000-4000-8000-000000000009",
+        "parentRevisionIds": [
+          "0000000a-0000-4000-8000-00000000000a"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "lateParent",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "0000000a-0000-4000-8000-00000000000a",
+        "parentRevisionIds": [
+          "00000003-0000-4000-8000-000000000003"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unicode",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "0000000b-0000-4000-8000-00000000000b",
+        "parentRevisionIds": [
+          "00000003-0000-4000-8000-000000000003"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "夜の音 🎵",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:unicode"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unsupportedVersion",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 2,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "uppercaseUUID",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "0000000B-0000-4000-8000-00000000000B",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "pathID",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "../other",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "blankName",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "  ",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "controlName",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "a\nb",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicateTrack",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          }
+        ]
+      }
+    },
+    {
+      "name": "selfParent",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [
+          "00000003-0000-4000-8000-000000000003"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unsortedParents",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [
+          "00000006-0000-4000-8000-000000000006",
+          "00000005-0000-4000-8000-000000000005"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicateParents",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [
+          "00000005-0000-4000-8000-000000000005",
+          "00000005-0000-4000-8000-000000000005"
+        ],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "badProvider",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "icloud",
+            "fileId": "id:a"
+          }
+        ]
+      }
+    },
+    {
+      "name": "emptyFileId",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "tombstoneTracks",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": true,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "notBoolean",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": 0,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missingDevice",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknownExtraField",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ],
+        "extra": "ignored-v1"
+      }
+    }
+  ],
+  "graphCases": [
+    {
+      "name": "initial",
+      "revisions": [
+        "initial"
+      ],
+      "state": "ready",
+      "headIds": [
+        "00000003-0000-4000-8000-000000000003"
+      ]
+    },
+    {
+      "name": "linear",
+      "revisions": [
+        "rename",
+        "initial"
+      ],
+      "state": "ready",
+      "headIds": [
+        "00000005-0000-4000-8000-000000000005"
+      ]
+    },
+    {
+      "name": "fork",
+      "revisions": [
+        "initial",
+        "rename",
+        "fork"
+      ],
+      "state": "conflict",
+      "headIds": [
+        "00000005-0000-4000-8000-000000000005",
+        "00000006-0000-4000-8000-000000000006"
+      ]
+    },
+    {
+      "name": "deleteAfterRename",
+      "revisions": [
+        "delete",
+        "rename",
+        "initial"
+      ],
+      "state": "ready",
+      "headIds": [
+        "00000007-0000-4000-8000-000000000007"
+      ]
+    },
+    {
+      "name": "deleteVersusEdit",
+      "revisions": [
+        "initial",
+        "rename",
+        "delete",
+        "fork"
+      ],
+      "state": "conflict",
+      "headIds": [
+        "00000006-0000-4000-8000-000000000006",
+        "00000007-0000-4000-8000-000000000007"
+      ]
+    },
+    {
+      "name": "resolvedFork",
+      "revisions": [
+        "resolution",
+        "initial",
+        "fork",
+        "rename"
+      ],
+      "state": "ready",
+      "headIds": [
+        "00000008-0000-4000-8000-000000000008"
+      ]
+    },
+    {
+      "name": "missingAncestry",
+      "revisions": [
+        "missingParent",
+        "initial"
+      ],
+      "state": "pending",
+      "headIds": []
+    },
+    {
+      "name": "lateParentArrives",
+      "revisions": [
+        "missingParent",
+        "initial",
+        "lateParent"
+      ],
+      "state": "ready",
+      "headIds": [
+        "00000009-0000-4000-8000-000000000009"
+      ]
+    }
+  ]
+}

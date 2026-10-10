@@ -385,9 +385,9 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = "Development Build";
-				PETRICHOR_URL_SCHEME = "petrichor-debug";
+				PETRICHOR_URL_SCHEME = "petrichor-zak-dev";
 				PETRICHOR_APP_NAME = "Petrichor Dev";
-				PETRICHOR_BUNDLE_ID = org.Petrichor.debug;
+				PETRICHOR_BUNDLE_ID = org.Petrichor.zak.debug;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PETRICHOR_BUNDLE_ID)";
 				PRODUCT_MODULE_NAME = Petrichor;
 				PRODUCT_NAME = "$(PETRICHOR_APP_NAME)";
@@ -549,9 +549,9 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = "Development Build";
 				"OTHER_CODE_SIGN_FLAGS[sdk=*]" = "--timestamp";
-				PETRICHOR_URL_SCHEME = "petrichor-debug";
+				PETRICHOR_URL_SCHEME = "petrichor-zak-dev";
 				PETRICHOR_APP_NAME = "Petrichor Dev";
-				PETRICHOR_BUNDLE_ID = org.Petrichor.debug;
+				PETRICHOR_BUNDLE_ID = org.Petrichor.zak.debug;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PETRICHOR_BUNDLE_ID)";
 				PRODUCT_MODULE_NAME = Petrichor;
 				PRODUCT_NAME = "$(PETRICHOR_APP_NAME)";

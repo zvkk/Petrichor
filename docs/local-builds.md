@@ -21,6 +21,7 @@ Work in the main source checkout on `dev/local-customizations`:
 ```
 
 The output is `.local-build/dev/Build/Products/Debug/Petrichor Dev.app`.
+Xcode Debug builds also use the same Dev identity and URL scheme.
 Installing a newer Dev app updates only that app; keep its container intact.
 The development icon differs from the Stable app's normal icon.
 

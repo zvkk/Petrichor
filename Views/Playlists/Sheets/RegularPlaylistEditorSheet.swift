@@ -50,6 +50,9 @@ struct RegularPlaylistEditorSheet: View {
     // save. Empty in create mode.
     @State private var originalTrackIDs: Set<Int64> = []
     @State private var didLoad = false
+    @State private var editorSnapshot: PlaylistEditorSnapshot?
+    @State private var isSaving = false
+    @State private var saveError: String?
 
     // Set once the user drags to reorder, so save only rewrites positions when needed.
     @State private var didReorder = false
@@ -126,6 +129,10 @@ struct RegularPlaylistEditorSheet: View {
                 onSave: { save() }
             )
         }
+        .disabled(isSaving || (isEditing && !didLoad))
+        .alert("Playlist could not be saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+            Button("OK") { saveError = nil }
+        } message: { Text(saveError ?? "") }
         .frame(width: 640, height: 700)
         .onAppear {
             loadExistingTracks()
@@ -398,7 +405,7 @@ extension RegularPlaylistEditorSheet {
     private var canSave: Bool {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         if isEditing {
-            return hasChanges || didReorder || name != originalName
+            return hasChanges || didReorder || name != (editorSnapshot?.name ?? originalName)
         }
         return true
     }
@@ -422,13 +429,20 @@ extension RegularPlaylistEditorSheet {
 
     private func loadExistingTracks() {
         guard let playlistID = editingPlaylistID, !didLoad else { return }
-        didLoad = true
-        // Load off the main thread so opening the editor on a large playlist doesn't stall.
         Task {
-            let tracks = libraryManager.databaseManager.loadTracksForPlaylist(playlistID)
-            await MainActor.run {
-                playlistTracks = tracks
-                originalTrackIDs = Set(tracks.compactMap { $0.trackId })
+            do {
+                let snapshot = try libraryManager.databaseManager.playlistEditorSnapshot(playlistID)
+                let tracks = libraryManager.databaseManager.getTracksWithArtwork(byIds: snapshot.trackIDs)
+                await MainActor.run {
+                    let byID = Dictionary(tracks.compactMap { track in track.trackId.map { ($0, track) } }, uniquingKeysWith: { first, _ in first })
+                    playlistTracks = snapshot.trackIDs.compactMap { byID[$0] }
+                    originalTrackIDs = Set(snapshot.trackIDs)
+                    editorSnapshot = snapshot
+                    name = snapshot.name
+                    didLoad = true
+                }
+            } catch {
+                await MainActor.run { didLoad = true; saveError = error.localizedDescription }
             }
         }
     }
@@ -504,88 +518,32 @@ extension RegularPlaylistEditorSheet {
     // MARK: - Save
 
     private func save() {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else { return }
-
+        let trimmedName = name.trimmingCharacters(in: PlaylistRevision.nameTrimSet)
+        guard !trimmedName.isEmpty, !isSaving else { return }
         let stagedTracks = playlistTracks
-        let staged = stagedTrackIDs
-        let editingID = editingPlaylistID
-        let originalIDs = originalTrackIDs
-
-        isPresented = false
-
-        if let editingID {
-            // Edit: diff staged contents against the original membership.
-            let trackIdsToAdd = stagedTracks
-                .compactMap { $0.trackId }
-                .filter { !originalIDs.contains($0) }
-            let trackIdsToRemove = originalIDs.filter { !staged.contains($0) }
-            let nameChanged = trimmedName != originalName
-            // Only persist positions if the user actually dragged; add/remove alone keeps
-            // the existing order correct.
-            let orderedTrackIds = didReorder ? stagedTracks.compactMap { $0.trackId } : nil
-
-            Task<Void, Never> {
-                await applyEdits(
-                    playlistID: editingID,
-                    newName: nameChanged ? trimmedName : nil,
-                    trackIdsToAdd: trackIdsToAdd,
-                    trackIdsToRemove: Array(trackIdsToRemove),
-                    orderedTrackIds: orderedTrackIds
-                )
-            }
-        } else {
-            // Create: the staged list is the playlist's initial contents.
-            let trackIdsToAdd = stagedTracks.compactMap { $0.trackId }
-            Task<Void, Never> {
-                let tracks = libraryManager.databaseManager.getTracksWithArtwork(byIds: trackIdsToAdd)
-                await MainActor.run {
-                    _ = playlistManager.createRegularPlaylist(name: trimmedName, tracks: tracks)
+        if let editingID = editingPlaylistID {
+            guard let expected = editorSnapshot else { return }
+            isSaving = true
+            Task {
+                do {
+                    try await libraryManager.databaseManager.savePlaylistEditor(playlistID: editingID, name: trimmedName, tracks: stagedTracks, expected: expected)
+                    await MainActor.run {
+                        playlistManager.loadPlaylists()
+                        playlistManager.loadPlaylistTracks(for: editingID)
+                        if didReorder {
+                            PlaylistSortManager.shared.setSortField(.custom, for: editingID)
+                            NotificationCenter.default.post(name: .trackTableSortChanged, object: nil, userInfo: ["isCustomSort": true])
+                        }
+                        isSaving = false
+                        isPresented = false
+                    }
+                } catch {
+                    await MainActor.run { isSaving = false; saveError = error.localizedDescription }
                 }
             }
-        }
-    }
-
-    private func applyEdits(
-        playlistID: UUID,
-        newName: String?,
-        trackIdsToAdd: [Int64],
-        trackIdsToRemove: [Int64],
-        orderedTrackIds: [Int64]?
-    ) async {
-        if let newName,
-           let playlist = await MainActor.run(body: { playlistManager.playlists.first { $0.id == playlistID } }) {
-            await MainActor.run {
-                playlistManager.renamePlaylist(playlist, newName: newName)
-            }
-        }
-
-        if !trackIdsToAdd.isEmpty {
-            let tracksToAdd = libraryManager.databaseManager.getTracksWithArtwork(byIds: trackIdsToAdd)
-            await playlistManager.addTracksToPlaylist(tracks: tracksToAdd, playlistID: playlistID)
-        }
-
-        if !trackIdsToRemove.isEmpty {
-            let tracksToRemove = libraryManager.databaseManager.getTracksWithArtwork(byIds: trackIdsToRemove)
-            await playlistManager.removeTracksFromPlaylist(tracks: tracksToRemove, playlistID: playlistID)
-        }
-
-        if let orderedTrackIds {
-            // Persist the new positions, then mark this playlist as custom-sorted so the
-            // detail view reflects the manual order (matching the old reorder sheet).
-            await playlistManager.applyPlaylistTrackOrder(playlistID: playlistID, orderedTrackIds: orderedTrackIds)
-            await MainActor.run {
-                PlaylistSortManager.shared.setSortField(.custom, for: playlistID)
-                NotificationCenter.default.post(
-                    name: .trackTableSortChanged,
-                    object: nil,
-                    userInfo: ["isCustomSort": true]
-                )
-            }
-        }
-
-        if !trackIdsToAdd.isEmpty || !trackIdsToRemove.isEmpty {
-            Logger.info("Updated playlist: added \(trackIdsToAdd.count), removed \(trackIdsToRemove.count) tracks")
+        } else {
+            _ = playlistManager.createRegularPlaylist(name: trimmedName, tracks: stagedTracks)
+            isPresented = false
         }
     }
 

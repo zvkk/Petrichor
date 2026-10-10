@@ -43,6 +43,7 @@ struct IntegrationsTabView: View {
 
     var body: some View {
         Form {
+            DropboxPlaylistSyncSettingsView()
             Section {
                 lastfmSection
             } header: {
@@ -62,7 +63,7 @@ struct IntegrationsTabView: View {
             }
         }
         .formStyle(.grouped)
-        .scrollDisabled(true)
+        .scrollDisabled(false)
         .padding(5)
         .alert("Disconnect from Last.fm?", isPresented: $showDisconnectConfirmation) {
             Button("Cancel", role: .cancel) { }

@@ -493,6 +493,10 @@ extension DatabaseManager {
         
         var count = 0
         while let fileURL = enumerator.nextObject() as? URL {
+            if fileURL.pathComponents.contains(".crate-sync") {
+                enumerator.skipDescendants()
+                continue
+            }
             let ext = fileURL.pathExtension.lowercased()
             guard !ext.isEmpty, supportedExtensions.contains(ext),
                   let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
@@ -745,6 +749,10 @@ extension DatabaseManager {
         var musicPaths: Set<String> = []
 
         while let fileURL = enumerator.nextObject() as? URL {
+            if fileURL.pathComponents.contains(".crate-sync") {
+                enumerator.skipDescendants()
+                continue
+            }
             let fileExtension = fileURL.pathExtension.lowercased()
             let filename = fileURL.deletingPathExtension().lastPathComponent
             let isSupportedAudio = supportedExtensions.contains(fileExtension)

@@ -10,6 +10,7 @@ import GRDB
 extension DatabaseManager {
     func savePlaylistAsync(_ playlist: Playlist) async throws {
         try await dbQueue.write { db in
+            let previousIDs = Set(try PlaylistTrack.filter(PlaylistTrack.Columns.playlistId == playlist.id.uuidString).fetchAll(db).map(\.trackId))
             // Save the playlist using GRDB's save method
             try playlist.save(db)
             
@@ -63,6 +64,7 @@ extension DatabaseManager {
                     Logger.info("Batch inserted \(playlistTracks.count) tracks to playlist")
                 }
             }
+            try self.capturePlaylistIntent(db, playlistID: playlist.id, mutation: .replace(previousIDs.subtracting(playlist.tracks.compactMap(\.trackId))))
         }
     }
     
@@ -111,6 +113,7 @@ extension DatabaseManager {
                 name: playlist.name,
                 in: db
             )
+            try self.capturePlaylistIntent(db, playlistID: playlist.id, mutation: .metadata)
         }
     }
 
@@ -128,6 +131,7 @@ extension DatabaseManager {
 
     func savePlaylist(_ playlist: Playlist) throws {
         try dbQueue.write { db in
+            let previousIDs = Set(try PlaylistTrack.filter(PlaylistTrack.Columns.playlistId == playlist.id.uuidString).fetchAll(db).map(\.trackId))
             // Save the playlist using GRDB's save method
             try playlist.save(db)
             
@@ -171,6 +175,7 @@ extension DatabaseManager {
                 
                 Logger.info("Verified \(savedCount) tracks saved for playlist in database")
             }
+            try self.capturePlaylistIntent(db, playlistID: playlist.id, mutation: .replace(previousIDs.subtracting(playlist.tracks.compactMap(\.trackId))))
         }
     }
     
@@ -416,6 +421,7 @@ extension DatabaseManager {
             if !rows.isEmpty {
                 try PlaylistTrack.insertMany(rows, db: db)
                 try self.touchPlaylistModified(pid, db: db, date: now)
+                try self.capturePlaylistIntent(db, playlistID: playlistId, mutation: .append)
             }
             return rows.count
         }
@@ -435,6 +441,7 @@ extension DatabaseManager {
 
             try self.renumberPlaylistPositions(pid, db: db)
             try self.touchPlaylistModified(pid, db: db, date: Date())
+            try self.capturePlaylistIntent(db, playlistID: playlistId, mutation: .remove(idSet))
         }
     }
 
@@ -450,6 +457,8 @@ extension DatabaseManager {
                 .fetchAll(db)
                 .reduce(into: [Int64: Int]()) { dict, row in dict[row.trackId] = row.position }
 
+            guard Set(orderedTrackIds) == Set(currentPositions.keys), orderedTrackIds.count == currentPositions.count else { throw PlaylistSyncError.staleEditor }
+
             for (index, trackId) in orderedTrackIds.enumerated() where currentPositions[trackId] != index {
                 try db.execute(
                     sql: "UPDATE playlist_tracks SET position = ? WHERE playlist_id = ? AND track_id = ?",
@@ -458,6 +467,7 @@ extension DatabaseManager {
             }
 
             try self.touchPlaylistModified(pid, db: db, date: Date())
+            try self.capturePlaylistIntent(db, playlistID: playlistId, mutation: .order)
         }
     }
 
@@ -491,7 +501,9 @@ extension DatabaseManager {
             if let playlist = try Playlist
                 .filter(Playlist.Columns.id == playlistId.uuidString)
                 .fetchOne(db) {
+                try self.capturePlaylistIntent(db, playlistID: playlistId, mutation: .delete)
                 try playlist.delete(db)
+                try db.execute(sql: "DELETE FROM pinned_items WHERE playlist_id = ?", arguments: [playlistId.uuidString])
             }
         }
     }
@@ -520,6 +532,8 @@ extension DatabaseManager {
                 )
                 
                 try playlistTrack.insert(db)
+                try self.touchPlaylistModified(playlistId.uuidString, db: db, date: Date())
+                try self.capturePlaylistIntent(db, playlistID: playlistId, mutation: .append)
                 Logger.info("Added single track to playlist")
             }
             return true
@@ -553,6 +567,8 @@ extension DatabaseManager {
                         arguments: [index, track.playlistId, track.trackId]
                     )
                 }
+                try self.touchPlaylistModified(playlistId.uuidString, db: db, date: Date())
+                try self.capturePlaylistIntent(db, playlistID: playlistId, mutation: .remove([trackId]))
             }
             return true
         } catch {

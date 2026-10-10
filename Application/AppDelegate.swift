@@ -99,6 +99,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate {
         }
     }
 
+    func applicationDidBecomeActive(_ notification: Notification) {
+        DropboxPlaylistSyncCoordinator.shared.scheduleSync()
+    }
+
     func applicationDidResignActive(_ notification: Notification) {
         AppCoordinator.shared?.savePlaybackState(synchronous: false)
     }

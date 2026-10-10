@@ -3,6 +3,7 @@ import SwiftUI
 /// Single source of truth for a playlist's options menu (Pin, Edit, Delete), so the Playlist
 /// sidebar and the Home sidebar (for pinned playlists) present the exact same menu. Editing
 /// (including renaming) happens through the editor sheet, so there's no inline-rename action.
+@MainActor
 enum PlaylistMenuBuilder {
     static func items(
         for playlist: Playlist,
@@ -27,6 +28,18 @@ enum PlaylistMenuBuilder {
                 playlistManager.showEditRegularPlaylistModal(playlist)
             }
         })
+
+        if playlist.type == .regular && playlist.isContentEditable {
+            let sync = DropboxPlaylistSyncCoordinator.shared
+            if let state = sync.states.first(where: { $0.localID == playlist.id }) {
+                items.append(.button(title: String(localized: "Sync Now")) { Task { await sync.syncNow() } })
+                if state.issue == "conflict" {
+                    items.append(.button(title: String(localized: "Resolve Sync Conflict…")) { sync.resolve(state) })
+                }
+            } else {
+                items.append(.button(title: String(localized: "Share with iPhone")) { sync.share(playlist) })
+            }
+        }
 
         items.append(.divider)
 

@@ -24,7 +24,7 @@ case "$flavor" in
         ;;
     dev)
         configuration="Debug"
-        app_name="Petrichor Dev"
+        app_name="Crate Mac"
         bundle_id="org.Petrichor.zak.debug"
         url_scheme="petrichor-zak-dev"
         ;;

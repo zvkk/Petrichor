@@ -292,6 +292,10 @@ enum DatabaseMigrator {
             Logger.info("v13_add_discover_radio_and_category_pins migration completed")
         }
 
+        migrator.registerMigration("v14_dropbox_playlist_sync") { db in
+            try DatabaseManager.createPlaylistSyncSchema(db)
+        }
+
         // MARK: - Future Migrations
         // Add new migrations here as: migrator.registerMigration("v14_description") { db in ... }
 

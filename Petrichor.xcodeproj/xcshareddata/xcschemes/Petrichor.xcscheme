@@ -30,7 +30,7 @@
       shouldUseLaunchSchemeArgsEnv = "NO"
       shouldAutocreateTestPlan = "YES">
       <MacroExpansion>
-         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="550F4A0D2DB45B1A005F794E" BuildableName="Petrichor Dev.app" BlueprintName="Petrichor" ReferencedContainer="container:Petrichor.xcodeproj"/>
+         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="550F4A0D2DB45B1A005F794E" BuildableName="Crate Mac.app" BlueprintName="Petrichor" ReferencedContainer="container:Petrichor.xcodeproj"/>
       </MacroExpansion>
       <EnvironmentVariables>
          <EnvironmentVariable key="PETRICHOR_REGRESSION_DATABASE" value="$(PETRICHOR_REGRESSION_DATABASE)" isEnabled="YES"/>

@@ -7,6 +7,8 @@ enum URLSchemeHandler {
         Logger.info("URLSchemeHandler: Received callback - \(url.scheme ?? "nil")://\(url.host ?? "nil")")
         
         switch url.host {
+        case "dropbox-callback":
+            break // ASWebAuthenticationSession owns its state-checked native callback.
         case "lastfm-callback":
             AppCoordinator.shared?.scrobbleManager.handleAuthCallback(url)
         default:

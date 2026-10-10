@@ -35,7 +35,7 @@
 
 **Interfaces:** Consume `docs/dropbox-playlist-protocol.md` verbatim (read Mac absolute path). Produce strict revision decoder/head resolver; library transaction hooks; pairing/sync/share/conflict service; UI controls that make those services reachable. No unshare/detach action in v1. Local function names may follow repo conventions; wire names may not change. Parent owns fixture JSON, not your product files.
 
-- [ ] Write failing tests using real test-support SQLite for atomic intent capture, rollback, unresolved members, revision ancestry, duplicates/collisions, generation checks and delete/edit conflict. Pattern:
+- [x] Write failing tests using real test-support SQLite for atomic intent capture, rollback, unresolved members, revision ancestry, duplicates/collisions, generation checks and delete/edit conflict. Pattern:
 
 ```ts
 await shareCrate(crateId);
@@ -47,11 +47,11 @@ expect((await readPendingIntent(crateId)).name).toBe('After');
 
 Use actual exported implementation names in tests; this example specifies behavior, not a required public API.
 
-- [ ] Implement strict protocol decoder, DAG/pending/conflict selection and raw-body collision validation. Run tests under Node 24; prove malformed versions/parents/duplicate file refs are rejected.
-- [ ] Add migrations and transaction-local capture hooks across every user mutation, explicit suppression for apply/projection, source-change preservation and stale-editor guard. Capture immutable full ordered state (including unresolved references/native unmapped members), parent baseline and generation. Map and materialize exact wire bytes only after generation validation. Add native playback/downloading projection only for known Dropbox identities.
-- [ ] Implement pinned Dropbox pairing, immutable upload, paginated/restartable discovery, independent per-playlist blocked states, retry/backoff/cancellation and account/root binding. Add `files.content.write` to OAuth flow. Verify current scopes/callback behavior from versioned Expo documentation before changing integrations.
-- [ ] Add existing-style settings controls for connection/pairing/Sync Now/status/shared manual crates and conflict version choice/keep both. Trigger active foreground sync and debounced local edits. UI must expose missing tracks and blocking mapping/auth errors without leaking credentials.
-- [ ] Run focused tests, then `npm run typecheck`, `npm run lint`, `npm test` exactly. Baseline is 125 passing suites, 1950 passing tests/1 skipped. Report pre-existing warnings separately; no install/push. Self-review diff, commit own code, write task report with paths/commands/evidence and remaining setup limitations.
+- [x] Implement strict protocol decoder, DAG/pending/conflict selection and raw-body collision validation. Run tests under Node 24; prove malformed versions/parents/duplicate file refs are rejected.
+- [x] Add migrations and transaction-local capture hooks across every user mutation, explicit suppression for apply/projection, source-change preservation and stale-editor guard. Capture immutable full ordered state (including unresolved references/native unmapped members), parent baseline and generation. Map and materialize exact wire bytes only after generation validation. Add native playback/downloading projection only for known Dropbox identities.
+- [x] Implement pinned Dropbox pairing, immutable upload, paginated/restartable discovery, independent per-playlist blocked states, retry/backoff/cancellation and account/root binding. Add `files.content.write` to OAuth flow. Verify current scopes/callback behavior from versioned Expo documentation before changing integrations.
+- [x] Add existing-style settings controls for connection/pairing/Sync Now/status/shared manual crates and conflict version choice/keep both. Trigger active foreground sync and debounced local edits. UI must expose missing tracks and blocking mapping/auth errors without leaking credentials.
+- [x] Run focused tests, then `npm run typecheck`, `npm run lint`, `npm test` exactly. Baseline is 125 passing suites, 1950 passing tests/1 skipped. Report pre-existing warnings separately; no install/push. Self-review diff, commit own code, write task report with paths/commands/evidence and remaining setup limitations.
 
 ## Task 2: Crate Mac native sync, auth, and integration
 
@@ -59,7 +59,7 @@ Use actual exported implementation names in tests; this example specifies behavi
 
 **Interfaces:** Same wire contract and fixtures as Task 1. Persist native mappings, full wire order, snapshot intents, exact outgoing body, applied heads, pending remote revisions and cursor. All DB writes remain GRDB transactions; never call async network mapping inside one.
 
-- [ ] Write failing protocol/store tests against temporary GRDB DBs, including rename/delete/reorder capture, rollback, unresolved members, alias projections, stale editor and crash/reopen.
+- [x] Write failing protocol/store tests against temporary GRDB DBs, including rename/delete/reorder capture, rollback, unresolved members, alias projections, stale editor and crash/reopen.
 
 ```swift
 let manager = try DatabaseManager(databaseURL: fixtureURL)
@@ -68,11 +68,11 @@ let manager = try DatabaseManager(databaseURL: fixtureURL)
 // Fail an edit transaction and assert neither native data nor intent changed.
 ```
 
-- [ ] Implement the protocol/DAG/store and transaction-local snapshot capture at every native mutation seam. Preserve unresolved slots while applying visible reorder/removal. Incoming projection must not echo. Parent baseline includes unpublished local head; multiple remote heads stay conflict, missing parents stay pending.
-- [ ] Implement URLSession Dropbox transport and ASWebAuthenticationSession PKCE; Keychain tokens, refresh, explicit account/root verification and immutable uploads. Pair the same `.crate-sync/v1` library descriptor as iPhone. Use public app key settings; no hardcoded secret. Keep Mac folder bookmarks and mapping local; never send absolute file paths.
-- [ ] Wire native settings, selection of manual playlists to share, status/Sync Now/conflict resolution and foreground scheduling. Block publication of any playlist containing an unmapped local file instead of sending a partial list. Safely map local relative paths to pinned Dropbox file IDs after metadata/content verification; ambiguous matches remain actionable status.
-- [ ] Change display name to Crate Mac, preserving Dev bundle ID/container/URL scheme. Include test-host executable path consistency. Do not replace installed app in this task.
-- [ ] Run focused XCTest and build with cached dependencies. Existing baseline command:
+- [x] Implement the protocol/DAG/store and transaction-local snapshot capture at every native mutation seam. Preserve unresolved slots while applying visible reorder/removal. Incoming projection must not echo. Parent baseline includes unpublished local head; multiple remote heads stay conflict, missing parents stay pending.
+- [x] Implement URLSession Dropbox transport and ASWebAuthenticationSession PKCE; Keychain tokens, refresh, explicit account/root verification and immutable uploads. Pair the same `.crate-sync/v1` library descriptor as iPhone. Use public app key settings; no hardcoded secret. Keep Mac folder bookmarks and mapping local; never send absolute file paths.
+- [x] Wire native settings, selection of manual playlists to share, status/Sync Now/conflict resolution and foreground scheduling. Block publication of any playlist containing an unmapped local file instead of sending a partial list. Safely map local relative paths to pinned Dropbox file IDs after metadata/content verification; ambiguous matches remain actionable status.
+- [x] Change display name to Crate Mac, preserving Dev bundle ID/container/URL scheme. Include test-host executable path consistency. Do not replace installed app in this task.
+- [x] Run focused XCTest and build with cached dependencies. Existing baseline command:
 
 ```sh
 xcodebuild test -project Petrichor.xcodeproj -scheme Petrichor -configuration Debug \
@@ -90,12 +90,18 @@ Primary handles sandbox escalation if needed. Self-review, commit own product fi
 
 **Interfaces:** Both platform tests read the same fixture bytes. Report tests, build, install, live cloud, real phone acceptance separately.
 
-- [ ] Generate fixtures for initial/child/fork/tombstone/resolution, child-before-parent, duplicate-reference and bad-library/UUID payloads. Verify both decoders and DAG heads agree on every case; deterministic comparison must cover counts and IDs.
-- [ ] Astra reviews each platform diff against spec/contract, then reviews whole integration. Primary verifies every finding directly and issues bounded Sol fix tasks. Resolve major data-loss/security/reachability findings before acceptance.
-- [ ] Run final source checks once per final code state, Mac build/signature verification and iOS native build where environment permits. Test fake Dropbox transport both directions, offline/replay/conflict and missing tracks without changing real Dropbox.
-- [ ] Inspect actual local music/Dropbox root mapping and native app registration readiness without printing credentials. Do not fabricate live test success or substitute snapshots for real sync. A required interactive Dropbox login/write-scope consent is a setup dependency, not a reason to leave independent code/tests unfinished.
+- [x] Generate fixtures for initial/child/fork/tombstone/resolution, child-before-parent, duplicate-reference and bad-library/UUID payloads. Verify both decoders and DAG heads agree on every case; deterministic comparison must cover counts and IDs.
+- [x] Astra reviews each platform diff against spec/contract, then reviews whole integration. Primary verifies every finding directly and issues bounded Sol fix tasks. Resolve major data-loss/security/reachability findings before acceptance.
+- [x] Run final source checks once per final code state, Mac build/signature verification and iOS native build where environment permits. Test fake Dropbox transport both directions, offline/replay/conflict and missing tracks without changing real Dropbox.
+- [x] Inspect actual local music/Dropbox root mapping and native app registration readiness without printing credentials. Do not fabricate live test success or substitute snapshots for real sync. A required interactive Dropbox login/write-scope consent is a setup dependency, not a reason to leave independent code/tests unfinished.
 - [ ] Before any in-place app update, create complete verified container/Documents+Library backups, check inventory/hash/SQLite integrity and preserve installed identities. If live setup cannot be completed without user sign-in, save exact build/branch/test/checkpoint instructions and report one concrete setup action. Do not uninstall, push, merge or claim two-way live sync until evidenced.
 
 ## Execution decisions
 
 The user's “okay go ahead” explicitly authorizes building this agreed feature using the chosen agent roles. Internal plan generation/review is part of execution, not an additional approval gate. Mac and iPhone implementations may proceed independently only after the wire contract is locked. Astra reviews code read-only; primary retains diagnosis and integration decisions.
+
+## Delivery checkpoint
+
+Source work, reviews and both native candidates are complete. Final checks: iPhone 2030 passing tests/130 suites, typecheck pass, lint zero errors/27 baseline warnings; Mac 31 tests executed/1 existing skip/zero failures; production cross-platform harness 45 cases and bidirectional known-field preservation pass. Both app signatures and preserved identities verified. See `docs/dropbox-playlist-sync-verification.md`.
+
+Installation and live Dropbox acceptance remain unchecked intentionally: no browser is connected for developer registration verification or interactive authorization. No installed library, real Dropbox metadata, shared branch or Stable app was changed. Exact artifacts/receipts are retained in `/Users/zakcupido/Documents/Codex/checkpoints/2026-10-10-crate-dropbox-sync`.

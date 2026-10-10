@@ -164,6 +164,90 @@
           "fileId": "id:unicode"
         }
       ]
+    },
+    "collision": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000003-0000-4000-8000-000000000003",
+      "parentRevisionIds": [],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Different bytes",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "otherPlaylist": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000014-0000-4000-8000-000000000014",
+      "revisionId": "00000015-0000-4000-8000-000000000015",
+      "parentRevisionIds": [],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Warmup",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "cycleA": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000016-0000-4000-8000-000000000016",
+      "parentRevisionIds": [
+        "00000017-0000-4000-8000-000000000017"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Warmup",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
+    },
+    "cycleB": {
+      "protocolVersion": 1,
+      "libraryId": "00000001-0000-4000-8000-000000000001",
+      "playlistId": "00000002-0000-4000-8000-000000000002",
+      "revisionId": "00000017-0000-4000-8000-000000000017",
+      "parentRevisionIds": [
+        "00000016-0000-4000-8000-000000000016"
+      ],
+      "deviceId": "00000004-0000-4000-8000-000000000004",
+      "name": "Warmup",
+      "deleted": false,
+      "tracks": [
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-a"
+        },
+        {
+          "provider": "dropbox",
+          "fileId": "id:track-b"
+        }
+      ]
     }
   },
   "validationCases": [
@@ -720,6 +804,102 @@
         ],
         "extra": "ignored-v1"
       }
+    },
+    {
+      "name": "zwjEmoji",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "DJ 👨‍👩‍👧‍👦",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "formatScalar",
+      "valid": true,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "A⁠B",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "leadingBOM",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "﻿Warmup",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
+    },
+    {
+      "name": "trailingNBSP",
+      "valid": false,
+      "revision": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "playlistId": "00000002-0000-4000-8000-000000000002",
+        "revisionId": "00000003-0000-4000-8000-000000000003",
+        "parentRevisionIds": [],
+        "deviceId": "00000004-0000-4000-8000-000000000004",
+        "name": "Warmup ",
+        "deleted": false,
+        "tracks": [
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-a"
+          },
+          {
+            "provider": "dropbox",
+            "fileId": "id:track-b"
+          }
+        ]
+      }
     }
   ],
   "graphCases": [
@@ -816,6 +996,112 @@
       "headIds": [
         "00000009-0000-4000-8000-000000000009"
       ]
+    },
+    {
+      "name": "identicalReplay",
+      "revisions": [
+        "initial",
+        "initial"
+      ],
+      "state": "ready",
+      "headIds": [
+        "00000003-0000-4000-8000-000000000003"
+      ]
+    },
+    {
+      "name": "revisionCollision",
+      "revisions": [
+        "initial",
+        "collision"
+      ],
+      "state": "error",
+      "headIds": []
+    },
+    {
+      "name": "mixedPlaylists",
+      "revisions": [
+        "initial",
+        "otherPlaylist"
+      ],
+      "state": "error",
+      "headIds": []
+    },
+    {
+      "name": "cycle",
+      "revisions": [
+        "cycleA",
+        "cycleB"
+      ],
+      "state": "error",
+      "headIds": []
+    }
+  ],
+  "descriptorCases": [
+    {
+      "name": "valid",
+      "valid": true,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "dbid:account",
+        "namespaceId": "1234",
+        "musicFolderId": "id:music"
+      }
+    },
+    {
+      "name": "bareFolderPrefix",
+      "valid": false,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "dbid:account",
+        "namespaceId": "1234",
+        "musicFolderId": "id:"
+      }
+    },
+    {
+      "name": "longAccount",
+      "valid": false,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "namespaceId": "1234",
+        "musicFolderId": "id:music"
+      }
+    },
+    {
+      "name": "controlNamespace",
+      "valid": false,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "dbid:account",
+        "namespaceId": "a\nb",
+        "musicFolderId": "id:music"
+      }
+    },
+    {
+      "name": "uppercaseLibrary",
+      "valid": false,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "0000000B-0000-4000-8000-00000000000B",
+        "accountId": "dbid:account",
+        "namespaceId": "1234",
+        "musicFolderId": "id:music"
+      }
+    },
+    {
+      "name": "missingFolder",
+      "valid": false,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "dbid:account",
+        "namespaceId": "1234",
+        "musicFolderId": null
+      }
     }
   ]
 }

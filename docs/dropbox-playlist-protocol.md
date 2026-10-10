@@ -12,6 +12,8 @@ Path relative to the explicitly verified Dropbox music folder: `.crate-sync/v1/l
 
 Create descriptor once with Dropbox add/no-autorename/strict-conflict; an existing descriptor must be read and verified, never overwritten. Both apps must confirm account, namespace and music-folder identity against Dropbox, not supplied file contents alone. Root selection cannot fall back on HTTP errors. Existing folder IDs are opaque, not paths. Persist pairing context and library ID. New device joins existing descriptor; simultaneous creation loser joins validated winner. Pairing changes preserve outgoing work and require explicit disconnect/new pairing; no automatic rebind.
 
+Descriptor requires protocolVersion exactly 1, canonical lowercase library UUID, and string accountId/namespaceId/musicFolderId each 1–255 Unicode scalars without C0/C1 controls. musicFolderId must start with `id:` and contain at least one scalar after the prefix. Same 2 MiB body limit as revisions. Do not infer validity from Codable's successful structural decode alone.
+
 ## Revision
 
 Path: `.crate-sync/v1/playlists/<playlistId>/<revisionId>.json`.
@@ -24,9 +26,13 @@ All fields are required. UUID values are lowercase canonical 36-character UUID s
 
 Persist exact outgoing UTF-8 bytes atomically before HTTP upload. Serializers need not order JSON keys identically across platforms. Retries reuse persisted bytes, not reserialization. Same revision ID with different bytes is a hard integrity error; on a create conflict download and byte-compare existing body, acknowledging only equality.
 
+Cross-language scalar rules: controls mean exactly U+0000–001F and U+007F–009F; reject unpaired surrogate escapes/invalid UTF-8. Unicode format scalars (including internal ZWJ emoji sequences) are permitted. For name trimming, the forbidden leading/trailing whitespace set is exactly U+0009–000D, U+0020, U+00A0, U+1680, U+2000–200A, U+2028–2029, U+202F, U+205F, U+3000, U+FEFF. Producers trim this set before creating a revision; decoders reject untrimmed names. Do not use platform-default CharacterSet categories to broaden these rules.
+
 ## Ancestry and projection
 
 Keep revisions/tombstones indefinitely in v1. Validate edges remain within one library and playlist; detect cycles; absent parents stay pending. Calculate heads including unpublished local revisions. One complete head can project; incomparable complete heads produce conflict, retaining current presentation. A known incomplete branch blocks claiming that playlist fully synchronized; store it for retry. Receiving child before parent must eventually yield the child without treating it as a fresh initial playlist. Never use wall clock for conflict selection.
+
+Graph API semantics: reject a graph containing mixed library or playlist identities even when there are no cross-identity parent edges. Deduplicate equal revision IDs/content; unequal content for the same ID is an integrity error. On any incomplete ancestry return `incomplete=true` with zero actionable heads. Replayed identical input is idempotent. These graph checks supplement, not replace, raw-body collision checks in persistence.
 
 Native resolved rows are a projection, not the wire membership. Store full ordered wire refs plus mapping snapshot/generation. For editing, references mapped to the same visible native row form one stable group, retaining their original internal order; unresolved references each remain separate groups. Explicitly removing a visible row removes every reference mapped to that row in the editor's captured mapping snapshot. Reorder replaces resolved group slots with the requested visible-group order, retaining unresolved groups in place and appending new groups. Flatten groups afterward without losing alias refs. Source-driven local deletion or remapping changes projection only, never membership. If the mapping snapshot changes while an editor is open, its save is stale.
 

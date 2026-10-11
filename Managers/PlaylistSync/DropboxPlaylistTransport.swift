@@ -20,12 +20,13 @@ struct DropboxSyncPage: Decodable {
     var cursor: String
     var has_more: Bool
 }
-enum DropboxRequestError: Error { case notFound, conflict, cursorReset }
+enum DropboxRequestError: Error { case notFound, conflict, cursorReset, appFolderOnly }
 
 /// Native metadata transport. Audio bytes are only read locally to verify Dropbox's hash.
 final class DropboxPlaylistTransport {
     let accessToken: String
     let namespace: String?
+    private var appFolderRoot = false
     let session: URLSession
     init(accessToken: String, namespace: String? = nil, session: URLSession = .shared) {
         self.accessToken = accessToken; self.namespace = namespace; self.session = session
@@ -37,7 +38,7 @@ final class DropboxPlaylistTransport {
         request.httpMethod = "POST"
         request.timeoutInterval = 45
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        if let namespace {
+        if let namespace, !appFolderRoot {
             let root = try JSONSerialization.data(withJSONObject: [".tag": "namespace_id", "namespace_id": namespace])
             request.setValue(String(data: root, encoding: .utf8), forHTTPHeaderField: "Dropbox-API-Path-Root")
         }
@@ -61,6 +62,11 @@ final class DropboxPlaylistTransport {
             guard let http = response as? HTTPURLResponse else { throw PlaylistSyncError.transport(0) }
             if (200..<300).contains(http.statusCode) { return data }
             if http.statusCode == 401 { throw PlaylistSyncError.authentication }
+            if http.statusCode == 400, endpoint == "files/list_folder", arguments?["path"] as? String == "",
+               arguments?["limit"] as? Int == 1, !appFolderRoot,
+               String(data: data, encoding: .utf8)?.contains("path root is not supported for sandbox app") == true {
+                throw DropboxRequestError.appFolderOnly
+            }
             if http.statusCode == 409 {
                 // Never expose the response; only classify known transport tags.
                 let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -83,6 +89,27 @@ final class DropboxPlaylistTransport {
     }
     func metadata(_ path: String) async throws -> DropboxSyncMetadata {
         try JSONDecoder().decode(DropboxSyncMetadata.self, from: await request("files/get_metadata", arguments: ["path": path, "include_deleted": false]))
+    }
+    /// `/` explicitly selects this application's folder, never a full Dropbox account root.
+    /// Dropbox has no ordinary folder metadata/ID for an app root, so bind it to the app key.
+    func musicFolder(_ selection: String, appKey: String) async throws -> DropboxSyncMetadata {
+        appFolderRoot = false
+        guard selection == "/" || selection.hasPrefix("app-folder:") else { return try await metadata(selection) }
+        guard !appKey.isEmpty, appKey.count <= 244, appKey.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }),
+              selection == "/" || selection == "app-folder:" + appKey,
+              namespace != nil else { throw PlaylistSyncError.pairingChanged }
+        // Only the specific app-folder rejection authorizes headerless app-root access.
+        do {
+            _ = try await request("files/list_folder", arguments: ["path": "", "limit": 1])
+            throw PlaylistSyncError.configuration
+        } catch DropboxRequestError.appFolderOnly { }
+        appFolderRoot = true
+        do { _ = try await request("files/list_folder", arguments: ["path": "", "limit": 1]) }
+        catch { appFolderRoot = false; throw error }
+        return DropboxSyncMetadata(id: "app-folder:" + appKey, path_display: "", path_lower: "", tag: "folder")
+    }
+    func musicPath(_ folderID: String, _ relative: String) -> String {
+        Self.childPath(appFolderRoot ? "" : folderID, relative)
     }
     func download(_ path: String) async throws -> Data {
         let info = try await metadata(path)

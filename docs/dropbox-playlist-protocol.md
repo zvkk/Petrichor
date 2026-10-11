@@ -51,3 +51,11 @@ First version does not auto-merge divergent same-playlist edits. Expose versions
 Use independent device PKCE/refresh credentials, content-write scope and pinned account/root context. List metadata subtree with pagination/cursor; durably store each fetched revision or pending-download obligation before advancing its cursor. Cursor reset means rescan, never delete native state. An absent Dropbox file is not a playlist tombstone. No last-writer-wins overwrite or autorename. Retry bounded failures/backoff and show actionable status; auth/root failures preserve outgoing data.
 
 No revision publishes a shortened playlist to work around unmapped originating tracks. Known remote refs missing locally still publish and remain visible through missing-count status. Publication and projection of unrelated playlists continue when one is mapping-blocked or conflicted.
+
+## Explicit Dropbox app-folder root (2026-10-11)
+
+Enter `/` to pair the existing Crate App folder when the Dropbox registration uses App Folder access. This does not select a full Dropbox account root. The client refreshes credentials against the configured app key, verifies account/root identity, and requires Dropbox's specific app-folder rejection of a namespace-root probe before reading the headerless application root. Generic errors and successful full-account probes never authorize fallback.
+
+For this mode, `musicFolderId` is `app-folder:<public app key>` (nonempty ASCII alphanumeric suffix); `namespaceId` remains the verified account root namespace. It is an application-root binding, not a Dropbox file ID. Remote paths are relative to the authorized application root, while track references remain real Dropbox file IDs. Both peers must support this descriptor extension. Existing `id:` folder bindings are unchanged.
+
+Every sync reverifies the credential/app binding and exact shared descriptor before writes. Re-pairing refuses changed or missing existing descriptors. After a descriptor is validated, the playlists directory is ensured so an empty library can sync. No audio files are uploaded, moved or deleted.

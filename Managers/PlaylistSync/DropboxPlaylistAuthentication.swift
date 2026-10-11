@@ -120,9 +120,9 @@ final class DropboxPlaylistAuthentication: NSObject, ASWebAuthenticationPresenta
               let expires = object["expires_in"] as? Double else { throw PlaylistSyncError.authentication }
         return DropboxSyncCredentials(accessToken: access, refreshToken: refresh, expiresAt: Date().addingTimeInterval(expires))
     }
-    func credentials() async throws -> DropboxSyncCredentials {
+    func credentials(forceRefresh: Bool = false) async throws -> DropboxSyncCredentials {
         guard var credentials = try DropboxSyncVault.load() else { throw PlaylistSyncError.authentication }
-        if credentials.expiresAt.timeIntervalSinceNow < 120 {
+        if forceRefresh || credentials.expiresAt.timeIntervalSinceNow < 120 {
             guard !appKey.isEmpty else { throw PlaylistSyncError.configuration }
             credentials = try await token(["grant_type": "refresh_token", "refresh_token": credentials.refreshToken, "client_id": appKey], previousRefresh: credentials.refreshToken)
             try DropboxSyncVault.save(credentials)

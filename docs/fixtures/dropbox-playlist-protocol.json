@@ -156,7 +156,7 @@
         "00000003-0000-4000-8000-000000000003"
       ],
       "deviceId": "00000004-0000-4000-8000-000000000004",
-      "name": "夜の音 🎵",
+      "name": "\u591c\u306e\u97f3 \ud83c\udfb5",
       "deleted": false,
       "tracks": [
         {
@@ -435,7 +435,7 @@
           "00000003-0000-4000-8000-000000000003"
         ],
         "deviceId": "00000004-0000-4000-8000-000000000004",
-        "name": "夜の音 🎵",
+        "name": "\u591c\u306e\u97f3 \ud83c\udfb5",
         "deleted": false,
         "tracks": [
           {
@@ -815,7 +815,7 @@
         "revisionId": "00000003-0000-4000-8000-000000000003",
         "parentRevisionIds": [],
         "deviceId": "00000004-0000-4000-8000-000000000004",
-        "name": "DJ 👨‍👩‍👧‍👦",
+        "name": "DJ \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66",
         "deleted": false,
         "tracks": [
           {
@@ -839,7 +839,7 @@
         "revisionId": "00000003-0000-4000-8000-000000000003",
         "parentRevisionIds": [],
         "deviceId": "00000004-0000-4000-8000-000000000004",
-        "name": "A⁠B",
+        "name": "A\u2060B",
         "deleted": false,
         "tracks": [
           {
@@ -863,7 +863,7 @@
         "revisionId": "00000003-0000-4000-8000-000000000003",
         "parentRevisionIds": [],
         "deviceId": "00000004-0000-4000-8000-000000000004",
-        "name": "﻿Warmup",
+        "name": "\ufeffWarmup",
         "deleted": false,
         "tracks": [
           {
@@ -887,7 +887,7 @@
         "revisionId": "00000003-0000-4000-8000-000000000003",
         "parentRevisionIds": [],
         "deviceId": "00000004-0000-4000-8000-000000000004",
-        "name": "Warmup ",
+        "name": "Warmup\u00a0",
         "deleted": false,
         "tracks": [
           {
@@ -1101,6 +1101,50 @@
         "accountId": "dbid:account",
         "namespaceId": "1234",
         "musicFolderId": null
+      }
+    },
+    {
+      "name": "app-folder-root",
+      "valid": true,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "dbid:account",
+        "namespaceId": "1234",
+        "musicFolderId": "app-folder:publicKey123"
+      }
+    },
+    {
+      "name": "empty-app-folder-key",
+      "valid": false,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "dbid:account",
+        "namespaceId": "1234",
+        "musicFolderId": "app-folder:"
+      }
+    },
+    {
+      "name": "punctuated-app-folder-key",
+      "valid": false,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "dbid:account",
+        "namespaceId": "1234",
+        "musicFolderId": "app-folder:key-with-dash"
+      }
+    },
+    {
+      "name": "spaced-app-folder-key",
+      "valid": false,
+      "descriptor": {
+        "protocolVersion": 1,
+        "libraryId": "00000001-0000-4000-8000-000000000001",
+        "accountId": "dbid:account",
+        "namespaceId": "1234",
+        "musicFolderId": "app-folder:key with space"
       }
     }
   ]

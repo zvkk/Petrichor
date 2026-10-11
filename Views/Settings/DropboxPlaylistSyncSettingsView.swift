@@ -11,7 +11,7 @@ struct DropboxPlaylistSyncSettingsView: View {
             Text("Register redirect URI: \(sync.authentication.redirectURI)")
                 .font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             TextField("Dropbox music folder path", text: $musicPath)
-                .help("The exact folder path visible to the Dropbox API, or a known folder id:. Pair the same folder on iPhone.")
+                .help("Use / for the Crate App folder. For Full Dropbox access, use an existing folder path or id:. Pair the same folder on iPhone.")
             HStack {
                 Button("Connect Dropbox") { Task { await sync.connect() } }
                 Button("Pair Music Folder…") { Task { await sync.pair(remotePath: musicPath) } }

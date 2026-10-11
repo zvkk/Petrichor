@@ -27,6 +27,47 @@ final class DropboxPlaylistTransportTests: XCTestCase {
         configuration.protocolClasses = [DropboxFixtureProtocol.self]
         return DropboxPlaylistTransport(accessToken: "fixture-access", namespace: "fixture-namespace", session: URLSession(configuration: configuration))
     }
+    func testExplicitAppFolderRootOmitsNamespaceOnlyAfterSpecificRejection() async throws {
+        var requests: [URLRequest] = []
+        DropboxFixtureProtocol.handler = { request in
+            requests.append(request)
+            if requests.count == 1 {
+                XCTAssertNotNil(request.value(forHTTPHeaderField: "Dropbox-API-Path-Root"))
+                XCTAssertTrue(request.url!.path.hasSuffix("/list_folder"))
+                return (400, Data("Error: path root is not supported for sandbox app".utf8))
+            }
+            XCTAssertNil(request.value(forHTTPHeaderField: "Dropbox-API-Path-Root"))
+            if request.url!.path.hasSuffix("/upload") {
+                let arg = try XCTUnwrap(request.value(forHTTPHeaderField: "Dropbox-API-Arg"))
+                let args = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(arg.utf8)) as? [String: Any])
+                XCTAssertEqual(args["path"] as? String, "/.crate-sync/v1/library.json")
+                XCTAssertFalse(arg.contains("app-folder:"))
+            }
+            return (200, Data("{\"entries\":[],\"cursor\":\"fixture\",\"has_more\":false}".utf8))
+        }
+        let transport = client()
+        let folder = try await transport.musicFolder("/", appKey: "fixtureKey123")
+        XCTAssertEqual(folder.id, "app-folder:fixtureKey123")
+        XCTAssertEqual(folder.path_display, "")
+        let path = transport.musicPath(try XCTUnwrap(folder.id), ".crate-sync/v1/library.json")
+        XCTAssertEqual(path, "/.crate-sync/v1/library.json")
+        try await transport.immutableUpload(path, body: Data("{}".utf8))
+        XCTAssertEqual(requests.count, 3)
+    }
+    func testAppFolderRootDoesNotFallbackForOtherFailuresOrFullDropbox() async throws {
+        for status in [200, 400, 401, 403, 409] {
+            var count = 0
+            DropboxFixtureProtocol.handler = { _ in count += 1; return (status, Data("unrelated response".utf8)) }
+            do { _ = try await client().musicFolder("/", appKey: "fixtureKey123"); XCTFail("Must reject \(status)") }
+            catch { }
+            XCTAssertEqual(count, 1)
+        }
+        var count = 0
+        DropboxFixtureProtocol.handler = { _ in count += 1; return (200, Data()) }
+        do { _ = try await client().musicFolder("app-folder:otherKey", appKey: "fixtureKey123"); XCTFail("Must reject a changed app key") }
+        catch PlaylistSyncError.pairingChanged { }
+        XCTAssertEqual(count, 0)
+    }
     func testCreateConflictVerifiesExactBytesWithPinnedRootAndNoAutorename() async throws {
         let body = Data("immutable revision".utf8)
         var requests: [URLRequest] = []

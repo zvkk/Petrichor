@@ -73,7 +73,9 @@ struct SyncLibraryDescriptor: Codable, Equatable, Sendable {
     func validate() throws {
         guard protocolVersion == 1, PlaylistRevision.uuid(libraryId), PlaylistRevision.clean(accountId, max: 255), PlaylistRevision.clean(namespaceId, max: 255),
               PlaylistRevision.clean(musicFolderId, max: 255),
-              musicFolderId.hasPrefix("id:"), musicFolderId.count > 3 else { throw PlaylistSyncError.invalidRevision }
+              (musicFolderId.hasPrefix("id:") && musicFolderId.count > 3) ||
+              (musicFolderId.hasPrefix("app-folder:") && musicFolderId.count > 11 &&
+               musicFolderId.dropFirst(11).allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber) }) else { throw PlaylistSyncError.invalidRevision }
     }
 }
 struct SyncPairing: Codable, Equatable, Sendable {

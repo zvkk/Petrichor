@@ -59,23 +59,23 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         let access = root.startAccessingSecurityScopedResource()
         defer { if access { root.stopAccessingSecurityScopedResource() } }
         do {
-            let credentials = try await authentication.credentials()
+            let credentials = try await authentication.credentials(forceRefresh: input == "/")
             let account = try await DropboxPlaylistTransport(accessToken: credentials.accessToken).account()
             let client = DropboxPlaylistTransport(accessToken: credentials.accessToken, namespace: account.root_info.root_namespace_id)
-            let music = try await client.metadata(input)
-            guard music.tag == "folder", let folderID = music.id, let remoteRoot = music.path_display,
-                  !remoteRoot.isEmpty else { throw PlaylistSyncError.configuration }
+            let music = try await client.musicFolder(input, appKey: authentication.appKey)
+            guard music.tag == "folder", let folderID = music.id, let remoteRoot = music.path_display else { throw PlaylistSyncError.configuration }
             // Validate an existing binding before any metadata write in a newly selected folder.
             let existingPairing = try db.syncPairing()
             let proposed = try Self.pairingDescriptor(existing: existingPairing, accountID: account.account_id,
                 namespace: account.root_info.root_namespace_id, folderID: folderID,
                 localRoot: root.standardizedFileURL.resolvingSymlinksInPath().path)
-            let base = folderID + "/.crate-sync/v1"
-            try await client.ensureFolder(DropboxPlaylistTransport.childPath(remoteRoot, ".crate-sync"))
-            try await client.ensureFolder(DropboxPlaylistTransport.childPath(remoteRoot, ".crate-sync/v1"))
+            let base = client.musicPath(folderID, ".crate-sync/v1")
             let descriptor: SyncLibraryDescriptor
             do { descriptor = try JSONDecoder().decode(SyncLibraryDescriptor.self, from: await client.download(base + "/library.json")) }
             catch DropboxRequestError.notFound {
+                guard existingPairing == nil else { throw PlaylistSyncError.pairingChanged }
+                try await client.ensureFolder(DropboxPlaylistTransport.childPath(remoteRoot, ".crate-sync"))
+                try await client.ensureFolder(DropboxPlaylistTransport.childPath(remoteRoot, ".crate-sync/v1"))
                 let bytes = try JSONEncoder().encode(proposed)
                 do {
                     try await client.immutableUpload(base + "/library.json", body: bytes)
@@ -87,7 +87,9 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             }
             try descriptor.validate()
             guard descriptor.accountId == account.account_id, descriptor.namespaceId == account.root_info.root_namespace_id,
-                  descriptor.musicFolderId == folderID else { throw PlaylistSyncError.pairingChanged }
+                  descriptor.musicFolderId == folderID,
+                  existingPairing == nil || descriptor == existingPairing?.descriptor else { throw PlaylistSyncError.pairingChanged }
+            try await client.ensureFolder(DropboxPlaylistTransport.childPath(remoteRoot, ".crate-sync/v1/playlists"))
             let bookmark = try root.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
             try db.saveSyncPairing(SyncPairing(descriptor: descriptor, localRootBookmark: bookmark,
                 localRootPath: root.standardizedFileURL.resolvingSymlinksInPath().path, remoteRootPath: remoteRoot))
@@ -121,13 +123,13 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         }
         do {
             guard let pairing = try db.syncPairing() else { throw PlaylistSyncError.notPaired }
-            let credentials = try await authentication.credentials()
+            let credentials = try await authentication.credentials(forceRefresh: pairing.descriptor.musicFolderId.hasPrefix("app-folder:"))
             let account = try await DropboxPlaylistTransport(accessToken: credentials.accessToken).account()
             guard account.account_id == pairing.descriptor.accountId, account.root_info.root_namespace_id == pairing.descriptor.namespaceId else { throw PlaylistSyncError.pairingChanged }
             let client = DropboxPlaylistTransport(accessToken: credentials.accessToken, namespace: pairing.descriptor.namespaceId)
-            let music = try await client.metadata(pairing.descriptor.musicFolderId)
+            let music = try await client.musicFolder(pairing.descriptor.musicFolderId, appKey: authentication.appKey)
             guard music.tag == "folder", music.id == pairing.descriptor.musicFolderId else { throw PlaylistSyncError.pairingChanged }
-            let descriptor = try JSONDecoder().decode(SyncLibraryDescriptor.self, from: await client.download(pairing.descriptor.musicFolderId + "/.crate-sync/v1/library.json"))
+            let descriptor = try JSONDecoder().decode(SyncLibraryDescriptor.self, from: await client.download(client.musicPath(pairing.descriptor.musicFolderId, ".crate-sync/v1/library.json")))
             try descriptor.validate()
             guard descriptor == pairing.descriptor else { throw PlaylistSyncError.pairingChanged }
             var stale = false
@@ -158,12 +160,12 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             var cursor = try db.syncCursor(), more = true
             while more {
                 let page: DropboxSyncPage
-                do { page = try await client.list(pairing.descriptor.musicFolderId + "/.crate-sync/v1", cursor: cursor) }
+                do { page = try await client.list(client.musicPath(pairing.descriptor.musicFolderId, ".crate-sync/v1"), cursor: cursor) }
                 catch DropboxRequestError.cursorReset { try db.resetSyncCursor(); cursor = nil; continue }
-                let prefix = (music.path_display ?? pairing.remoteRootPath).trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/"
+                let prefix = DropboxPlaylistTransport.childPath(liveRootPath, "")
                 let paths = page.entries.compactMap { entry -> String? in
                     guard entry.tag == "file", let path = entry.path_display else { return nil }
-                    let normalized = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                    let normalized = path
                     guard normalized.lowercased().hasPrefix(prefix.lowercased()) else { return nil }
                     let relative = String(normalized.dropFirst(prefix.count))
                     guard relative.hasPrefix(".crate-sync/v1/playlists/"), relative.hasSuffix(".json") else { return nil }
@@ -175,7 +177,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             var pendingErrors = 0
             for path in try db.syncIncomingPaths() {
                 do {
-                    let body = try await client.download(pairing.descriptor.musicFolderId + "/" + path)
+                    let body = try await client.download(client.musicPath(pairing.descriptor.musicFolderId, path))
                     try db.receiveSyncRevision(body, path: path, library: pairing.descriptor.libraryId)
                 } catch { pendingErrors += 1; try db.failSyncIncoming(path, error: safeMessage(error)) }
             }
@@ -197,7 +199,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                     let base = DropboxPlaylistTransport.childPath(liveRootPath, ".crate-sync/v1/playlists")
                     try await client.ensureFolder(base)
                     try await client.ensureFolder(base + "/" + revision.playlistId)
-                    try await client.immutableUpload(pairing.descriptor.musicFolderId + "/" + revision.path, body: body)
+                    try await client.immutableUpload(client.musicPath(pairing.descriptor.musicFolderId, revision.path), body: body)
                     try db.acknowledgeSyncRevision(id)
                 } catch PlaylistSyncError.authentication { throw PlaylistSyncError.authentication }
                 catch PlaylistSyncError.integrity { throw PlaylistSyncError.integrity }
@@ -220,7 +222,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         guard local.path.hasPrefix(prefix) else { throw PlaylistSyncError.mappingBlocked }
         let relative = String(local.path.dropFirst(prefix.count))
         guard !relative.split(separator: "/").contains(".crate-sync") else { throw PlaylistSyncError.mappingBlocked }
-        let remote = try await client.metadata(pairing.descriptor.musicFolderId + "/" + relative)
+        let remote = try await client.metadata(client.musicPath(pairing.descriptor.musicFolderId, relative))
         guard remote.tag == "file", let fileID = remote.id, let expectedHash = remote.content_hash else { throw PlaylistSyncError.mappingBlocked }
         let hash = try await Task.detached(priority: .utility) { try DropboxPlaylistTransport.contentHash(local) }.value
         guard hash == expectedHash else { throw PlaylistSyncError.mappingBlocked }

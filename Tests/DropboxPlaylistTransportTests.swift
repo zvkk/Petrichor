@@ -68,6 +68,19 @@ final class DropboxPlaylistTransportTests: XCTestCase {
         catch PlaylistSyncError.pairingChanged { }
         XCTAssertEqual(count, 0)
     }
+    func testMissingWriteScopeExplainsConsolePermissionWithoutRetrying() async throws {
+        var count = 0
+        DropboxFixtureProtocol.handler = { _ in
+            count += 1
+            return (400, Data("Your app is not permitted to access this endpoint because it does not have the required scope 'files.content.write'.".utf8))
+        }
+        do { try await client().ensureFolder("/.crate-sync"); XCTFail("Missing write scope must fail") }
+        catch { XCTAssertEqual(error.localizedDescription, "Enable files.content.write in the Dropbox app Permissions, then reconnect Dropbox.") }
+        XCTAssertEqual(count, 1)
+        DropboxFixtureProtocol.handler = { _ in (400, Data("Unrelated files.content.write failure".utf8)) }
+        do { try await client().ensureFolder("/.crate-sync"); XCTFail("Unknown error must fail") }
+        catch PlaylistSyncError.transport(let status) { XCTAssertEqual(status, 400) }
+    }
     func testCreateConflictVerifiesExactBytesWithPinnedRootAndNoAutorename() async throws {
         let body = Data("immutable revision".utf8)
         var requests: [URLRequest] = []

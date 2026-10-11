@@ -3,7 +3,7 @@ import Foundation
 /// Device-local failures deliberately carry no OAuth response or credential values.
 enum PlaylistSyncError: LocalizedError {
     case invalidRevision, integrity, incomplete, conflict, staleEditor, mappingBlocked, notPaired, pairingChanged
-    case transport(Int), authentication, configuration, cancelled
+    case transport(Int), authentication, writePermission, configuration, cancelled
     var errorDescription: String? {
         switch self {
         case .invalidRevision: return "Unsupported or invalid playlist revision."
@@ -16,6 +16,7 @@ enum PlaylistSyncError: LocalizedError {
         case .pairingChanged: return "The Dropbox account or paired music folder changed. Existing pending changes are retained."
         case .transport(let code): return "Dropbox request failed (HTTP \(code)). Retry Sync Now."
         case .authentication: return "Dropbox sign-in needs to be renewed. Pending changes are retained."
+        case .writePermission: return "Enable files.content.write in the Dropbox app Permissions, then reconnect Dropbox."
         case .configuration: return "Enter a Dropbox app key and choose the matching local and Dropbox music folders."
         case .cancelled: return "Dropbox sign-in was cancelled."
         }

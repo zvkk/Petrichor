@@ -152,6 +152,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                     }
                     _ = try db.materializeSyncIntent(state.localID, generation: intent.generation, resolved: resolved)
                 } catch PlaylistSyncError.authentication { throw PlaylistSyncError.authentication }
+                catch PlaylistSyncError.writePermission { throw PlaylistSyncError.writePermission }
                 catch PlaylistSyncError.pairingChanged { throw PlaylistSyncError.pairingChanged }
                 catch PlaylistSyncError.integrity { throw PlaylistSyncError.integrity }
                 catch { blocked += 1; try db.setSyncIssue(state.localID, issue: "mapping") }
@@ -185,6 +186,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             for ref in try db.allSyncFileIDs() {
                 do { try await mapRemote(ref, root: root, pairing: activePairing, client: client, db: db) }
                 catch PlaylistSyncError.authentication { throw PlaylistSyncError.authentication }
+                catch PlaylistSyncError.writePermission { throw PlaylistSyncError.writePermission }
                 catch PlaylistSyncError.pairingChanged { throw PlaylistSyncError.pairingChanged }
                 catch PlaylistSyncError.mappingBlocked { try db.invalidateSyncMapping(ref) }
                 catch DropboxRequestError.notFound { try db.invalidateSyncMapping(ref) }
@@ -202,6 +204,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                     try await client.immutableUpload(client.musicPath(pairing.descriptor.musicFolderId, revision.path), body: body)
                     try db.acknowledgeSyncRevision(id)
                 } catch PlaylistSyncError.authentication { throw PlaylistSyncError.authentication }
+                catch PlaylistSyncError.writePermission { throw PlaylistSyncError.writePermission }
                 catch PlaylistSyncError.integrity { throw PlaylistSyncError.integrity }
                 catch { failedPlaylists.insert(revision.playlistId); uploadsFailed += 1 }
             }

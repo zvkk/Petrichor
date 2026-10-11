@@ -62,6 +62,10 @@ final class DropboxPlaylistTransport {
             guard let http = response as? HTTPURLResponse else { throw PlaylistSyncError.transport(0) }
             if (200..<300).contains(http.statusCode) { return data }
             if http.statusCode == 401 { throw PlaylistSyncError.authentication }
+            if http.statusCode == 400,
+               String(data: data, encoding: .utf8)?.contains("does not have the required scope 'files.content.write'") == true {
+                throw PlaylistSyncError.writePermission
+            }
             if http.statusCode == 400, endpoint == "files/list_folder", arguments?["path"] as? String == "",
                arguments?["limit"] as? Int == 1, !appFolderRoot,
                String(data: data, encoding: .utf8)?.contains("path root is not supported for sandbox app") == true {

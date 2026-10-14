@@ -5,6 +5,85 @@ import AppKit
 
 final class PublicationPresentationTests: PublicationTestCase {
     @MainActor
+    func testCommittedNotificationDoesNotWaitForMainThreadAndReadsProof() async throws {
+        let id = try await service.capture(trackID: trackID, destinationRelativePath: "notify.wav", confirmedOutsideRootCopy: true)
+        let captured = try XCTUnwrap(service.journal.record(id))
+        let fake = PublicationServiceTests.Fake(captured)
+        await PublicationService(source: service) { _ in fake }.run(id: id)
+        let completed = try XCTUnwrap(service.journal.record(id))
+        let proof = try XCTUnwrap(completed.verifiedMapping)
+        let center = NotificationCenter()
+        let observed = expectation(description: "Committed proof visible on main actor")
+        let journal = service.journal
+        let observer = DropboxPlaylistSyncCoordinator.observeLocalEdits(center: center) {
+            XCTAssertEqual(try? journal.record(id)?.verifiedMapping, proof)
+            observed.fulfill()
+        }
+        defer { center.removeObserver(observer) }
+        let finished = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async(execute: DispatchWorkItem {
+            defer { finished.signal() }
+            do {
+                try journal.database.write { db in
+                    try PublicationJournal.save(completed, in: db)
+                    db.afterNextTransaction { _ in center.post(name: .playlistSyncLocalEdit, object: nil) }
+                }
+            } catch { XCTFail("Fixture commit failed: \(error)") }
+        })
+        // A .main NotificationCenter queue blocks this writer until this timeout.
+        let result = finished.wait(timeout: .now() + 2)
+        XCTAssertEqual(result, .success)
+        if result != .success {
+            await fulfillment(of: [observed], timeout: 2)
+            return
+        }
+        XCTAssertEqual(try journal.record(id)?.verifiedMapping, proof)
+        await fulfillment(of: [observed], timeout: 2)
+    }
+    @MainActor
+    func testSettingsOwnerWaitsForDismissalAndPreservesSelectionOnRetry() async throws {
+        let model = coordinator()
+        let owner = PublicationPresentationOwner()
+        owner.showingSettings = true
+        owner.requestFromDetails(trackIDs: [trackID], coordinator: model)
+        XCTAssertFalse(owner.showingSettings)
+        XCTAssertFalse(model.preparing)
+        XCTAssertFalse(model.showingConfirmation)
+        XCTAssertTrue(try service.journal.all().isEmpty)
+        owner.settingsDidDismiss(coordinator: model)
+        try await waitForPreparation(model)
+        XCTAssertEqual(model.selection.map(\.id), [trackID])
+        XCTAssertTrue(model.showingConfirmation)
+        model.dismissConfirmation()
+        owner.requestFromDetails(trackIDs: [trackID], coordinator: model)
+        try await waitForPreparation(model)
+        XCTAssertEqual(model.selection.map(\.id), [trackID])
+        XCTAssertTrue(try service.journal.all().isEmpty)
+        model.dismissConfirmation()
+        owner.settingsDidDismiss(coordinator: model)
+        XCTAssertFalse(model.preparing)
+    }
+    @MainActor
+    func testSharedConfirmationPolicyRejectsDuplicateRejectedAndUnapprovedPaths() async throws {
+        let model = coordinator()
+        model.request(trackIDs: [trackID])
+        try await waitForPreparation(model)
+        XCTAssertFalse(model.canSubmit(copyConsent: false))
+        XCTAssertTrue(model.canSubmit(copyConsent: true))
+        model.selection[0].rejectedDestination = model.selection[0].destination
+        XCTAssertFalse(model.canSubmit(copyConsent: true))
+        model.selection[0].rejectedDestination = nil
+        var duplicate = model.selection[0]
+        duplicate.destination = duplicate.destination.uppercased()
+        model.selection.append(duplicate)
+        XCTAssertFalse(model.canSubmit(copyConsent: true))
+        model.selection.removeLast()
+        model.selection[0].destination = "../escape.wav"
+        XCTAssertFalse(model.canSubmit(copyConsent: true))
+        model.selection = []
+        XCTAssertFalse(model.canSubmit(copyConsent: true))
+    }
+    @MainActor
     func coordinator(settings: @escaping () -> Void = {}) -> PublicationCoordinator {
         PublicationCoordinator(manager: manager, source: service,
             service: PublicationService(source: service) { _ in throw PublicationError.retryable },

@@ -3,12 +3,7 @@ import SwiftUI
 struct PublicationSheet: View {
     @ObservedObject var coordinator: PublicationCoordinator
     @State private var copyConsent = false
-    private var valid: Bool {
-        !coordinator.selection.isEmpty &&
-        coordinator.selection.allSatisfy { (try? PublicationSource.components($0.destination)) != nil && $0.destination != $0.rejectedDestination } &&
-        Set(coordinator.selection.map { $0.destination.lowercased() }).count == coordinator.selection.count &&
-        (!coordinator.selection.contains(where: \.outsideRoot) || copyConsent)
-    }
+    private var valid: Bool { coordinator.canSubmit(copyConsent: copyConsent) }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Add to shared music").font(.headline)

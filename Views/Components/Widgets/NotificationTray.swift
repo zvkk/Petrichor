@@ -260,8 +260,10 @@ struct NotificationTray: View {
     private var tooltipText: String {
         if manager.isActivityInProgress {
             return manager.activityMessage.isEmpty ? String(localized: "Refreshing Library...") : manager.activityMessage
-        } else if hasNotifications {
+        } else if !manager.messages.isEmpty {
             return String(localized: "\(manager.messages.count) notifications")
+        } else if hasNotifications {
+            return String(localized: "Shared music results")
         }
         return ""
     }

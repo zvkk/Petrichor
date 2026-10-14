@@ -21,8 +21,13 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
     private var savedConnection: Bool?
     private var db: DatabaseManager? { AppCoordinator.shared?.libraryManager.databaseManager }
     private init() {
-        editObserver = NotificationCenter.default.addObserver(forName: .playlistSyncLocalEdit, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.scheduleSync() }
+        editObserver = Self.observeLocalEdits { [weak self] in self?.scheduleSync() }
+    }
+    /// Posting after a database commit must never synchronously wait for the main queue.
+    static func observeLocalEdits(center: NotificationCenter = .default,
+                                  onEdit: @escaping @MainActor () -> Void) -> NSObjectProtocol {
+        center.addObserver(forName: .playlistSyncLocalEdit, object: nil, queue: nil) { _ in
+            Task { @MainActor in onEdit() }
         }
     }
     func refreshStatus() {

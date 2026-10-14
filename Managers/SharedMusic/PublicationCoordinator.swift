@@ -93,11 +93,14 @@ final class PublicationCoordinator: ObservableObject {
         }
     }
     func dismissConfirmation() { showingConfirmation = false; selection = []; confirmationPairing = nil; confirmationEpoch = nil }
+    func canSubmit(copyConsent: Bool) -> Bool {
+        !selection.isEmpty && !selection.contains(where: { $0.outsideRoot && !copyConsent }) &&
+        selection.allSatisfy { (try? PublicationSource.components($0.destination)) != nil && $0.destination != $0.rejectedDestination } &&
+        Set(selection.map { $0.destination.lowercased() }).count == selection.count
+    }
     func submit(copyConsent: Bool) {
         guard showingConfirmation, let source, let service,
-              !selection.isEmpty, !selection.contains(where: { $0.outsideRoot && !copyConsent }),
-              selection.allSatisfy({ (try? PublicationSource.components($0.destination)) != nil && $0.destination != $0.rejectedDestination }),
-              Set(selection.map { $0.destination.lowercased() }).count == selection.count else { return }
+              canSubmit(copyConsent: copyConsent) else { return }
         guard let pairing = confirmationPairing, let epoch = confirmationEpoch,
               connectionReady(), PublicationConnectionEpoch.shared.current() == epoch else {
             issue = String(localized: "The connection changed. Review the destination again before adding recordings.")
@@ -224,5 +227,27 @@ final class PublicationCoordinator: ObservableObject {
         case .verifying: return String(localized: "Verifying")
         case .completed: return String(localized: "Added")
         }
+    }
+}
+
+/// ContentView's Settings presentation state also owns its publication handoff.
+@MainActor
+final class PublicationPresentationOwner: ObservableObject {
+    @Published var showingSettings = false
+    private var pendingTrackIDs: [Int64]?
+    func requestFromDetails(trackIDs: [Int64], coordinator: PublicationCoordinator? = nil) {
+        let coordinator = coordinator ?? .shared
+        if showingSettings {
+            pendingTrackIDs = trackIDs
+            showingSettings = false
+        } else {
+            coordinator.request(trackIDs: trackIDs)
+        }
+    }
+    func settingsDidDismiss(coordinator: PublicationCoordinator? = nil) {
+        let coordinator = coordinator ?? .shared
+        guard let ids = pendingTrackIDs else { return }
+        pendingTrackIDs = nil
+        coordinator.request(trackIDs: ids)
     }
 }

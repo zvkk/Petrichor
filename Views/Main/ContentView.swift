@@ -54,7 +54,7 @@ struct ContentView: View {
     private var colorScheme
 
     @State private var selectedTab: Sections = .home
-    @State private var showingSettings = false
+    @StateObject private var publicationPresentation = PublicationPresentationOwner()
     @AppStorage(mainWindowPanelStateKey)
     private var mainWindowPanelState: MainWindowPanelState = .none
     @State private var rightSidebarContent: RightSidebarContent = .none
@@ -143,7 +143,7 @@ struct ContentView: View {
         .onAppear(perform: handleOnAppear)
         .contentViewNotificationHandlers(
             shouldFocusSearch: $shouldFocusSearch,
-            showingSettings: $showingSettings,
+            showingSettings: $publicationPresentation.showingSettings,
             selectedTab: $selectedTab,
             pendingLibraryFilter: $pendingLibraryFilter,
             selectedHomeSidebarItem: $selectedHomeSidebarItem,
@@ -195,8 +195,9 @@ struct ContentView: View {
                 toolbarContent
             }
         }
-        .sheet(isPresented: $showingSettings) {
+        .sheet(isPresented: $publicationPresentation.showingSettings, onDismiss: { publicationPresentation.settingsDidDismiss() }) {
             SettingsView()
+                .environment(\.requestSharedMusicPublication, { ids in publicationPresentation.requestFromDetails(trackIDs: ids) })
                 .environmentObject(libraryManager)
                 .environmentObject(playbackManager)
         }

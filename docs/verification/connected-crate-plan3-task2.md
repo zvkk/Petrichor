@@ -53,3 +53,11 @@ Coverage includes finish-accepted/lost-response and metadata-loss retry; no seco
 ## Scope limits
 
 Task3 must add atomic mapping/intents, Task4 must own one service instance and expose queue/retry/cancel/Check outcome UI with localized copy. Cancellation never deletes remote files. No snapshot garbage collection is installed; immutable operation-owned snapshots are retained. Source/native regression verification is established; full integration/UI/live-account/device/playback acceptance remains with primary and later gates.
+
+## Primary-review closeout
+
+Initial scoped commit: `87ca748e1fada0c201d41bbe1f449e4dceba2334` (follow-up classification commit follows).
+
+After exact metadata/hash matches, a sourceChanged/unavailableSource/unavailableScope/integrity failure is a known remote result with blocked local mapping. Both upload finalization and explicit outcome reconciliation persist the local-proof category; no mapping/completed state is written, and the remote file is untouched. An already cancelled row remains cancelled with the truthful local-proof category. Added regressions mutate the original after committed finish and before read-only outcome recovery.
+
+`/private/tmp/crate-plan3-task2-local-proof.log` and `.xcresult`: 18 service tests, zero failures. Final shared-helper and read-only regression evidence `/private/tmp/crate-plan3-task2-handoff.log` and `.xcresult`; 19 service tests, zero failures. Host Info.plist rechecked `org.Petrichor.zak.plan3-tests`; final lint remains 11 inherited serious errors and zero new serious errors. No scope expansion or live acceptance claimed.

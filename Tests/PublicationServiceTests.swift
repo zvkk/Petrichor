@@ -306,4 +306,33 @@ final class PublicationServiceTests: XCTestCase {
         }
     }
 
+    func testSourceChangedAfterRemoteCommitBlocksMappingWithLocalProofCategory() async throws {
+        let record = try await captured(), fake = Fake(try await captured())
+        let path = original
+        await fake.setCancel { try Data("changed after finish".utf8).write(to: path) }
+        let upload = PublicationService(source: service) { _ in fake }
+        await upload.run(id: record.id)
+        let result = try XCTUnwrap(service.journal.record(record.id))
+        XCTAssertEqual(result.state, .failed)
+        XCTAssertEqual(result.error, .sourceChanged)
+        XCTAssertNil(result.verifiedMapping)
+        let remote = try await fake.metadataAtDestination()
+        XCTAssertEqual(remote?.fileID, "id:verified")
+        let counts = await fake.counts(); XCTAssertEqual(counts.1, 1)
+    }
+
+    func testReadOnlyOutcomeKeepsLocalProofFailureDistinctFromUncertainFinish() async throws {
+        let record = try await captured(), fake = Fake(try await captured())
+        await fake.setTaskCancellation(commit: true)
+        let upload = PublicationService(source: service) { _ in fake }
+        await Task { await upload.run(id: record.id) }.value
+        try Data("changed before outcome check".utf8).write(to: original)
+        do { try await upload.reconcileOutcome(id: record.id); XCTFail() }
+        catch { XCTAssertEqual(error as? PublicationError, .sourceChanged) }
+        XCTAssertEqual(try service.journal.record(record.id)?.state, .cancelled)
+        XCTAssertEqual(try service.journal.record(record.id)?.error, .sourceChanged)
+        XCTAssertNil(try service.journal.record(record.id)?.verifiedMapping)
+        let counts = await fake.counts(); XCTAssertEqual(counts.0, 1)
+    }
+
 }

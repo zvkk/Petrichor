@@ -118,7 +118,9 @@ actor PublicationService {
             record = current
             let isCancelled = error is CancellationError || cancelled.contains(id)
             let category = DropboxPublicationTransport.classify(error)
-            if record.error == .finishUncertain && ![.contentMismatch, .needsNewName].contains(category) {
+            let definitive: [PublicationError] = [.contentMismatch, .needsNewName, .sourceChanged,
+                                                   .unavailableSource, .unavailableScope, .integrity]
+            if record.error == .finishUncertain && !definitive.contains(category) {
                 record.state = isCancelled ? .cancelled : .verifying
                 // Durable uncertainty survives network/auth failures and process death.
             } else {
@@ -155,7 +157,15 @@ actor PublicationService {
             throw afterFinish ? PublicationError.contentMismatch : PublicationError.needsNewName
         }
         guard remote.fileID.hasPrefix("id:"), remote.fileID.count > 3 else { throw PublicationError.contentMismatch }
-        try await verify(record)
+        do { try await verify(record) }
+        catch {
+            let category = DropboxPublicationTransport.classify(error)
+            if [.sourceChanged, .unavailableSource, .unavailableScope, .integrity].contains(category) {
+                // Remote bytes are known; a broken local binding blocks mapping, not remote outcome.
+                try source.journal.rejectFinish(record, error: category)
+            }
+            throw error
+        }
         try transport.checkValidity()
         try source.journal.complete(record, proof: remote, allowingCancellation: afterFinish)
         return true

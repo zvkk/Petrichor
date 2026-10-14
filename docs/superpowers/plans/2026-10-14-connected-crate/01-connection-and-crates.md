@@ -54,8 +54,8 @@ rg -n 'capturePlaylistIntent|savePlaylist|deletePlaylist|addTrack|removeTrack' "
 
 **Interfaces:** New `validatePlaylistSyncSchema(db: SQLiteDatabase): Promise<void>` validates required columns, primary/unique keys and indexes inside the append migration transaction. Existing `openLibrary(): Promise<SQLiteDatabase>` remains the public entry point. No schema-version constant is hardcoded before task 1.
 
-- [ ] Write fixtures for fresh DB, pre-v11 ordinary DB, old sync v11, current repaired v12, old sync after current repair, and incompatible same-name tables. Seed pairing/settings, exact revision bodies/outbox flags, pending paths, aliases, media ownership, crates, favourites and Digging sessions. Reuse real SQLite reset/preserve/failure injection helpers.
-- [ ] Add the core failure assertion, with existing test setup importing `openLibrary`, `closeLibrary` and `__resetDatabases`:
+- [x] Write fixtures for fresh DB, pre-v11 ordinary DB, old sync v11, current repaired v12, old sync after current repair, and incompatible same-name tables. Seed pairing/settings, exact revision bodies/outbox flags, pending paths, aliases, media ownership, crates, favourites and Digging sessions. Reuse real SQLite reset/preserve/failure injection helpers.
+- [x] Add the core failure assertion, with existing test setup importing `openLibrary`, `closeLibrary` and `__resetDatabases`:
 
 ```ts
 const db = await openLibrary();
@@ -66,7 +66,7 @@ expect(await db.getAllAsync('PRAGMA table_info(playlist_sync_downloads)'))
 ```
 
 Run `phone_test src/library/__tests__/playlist-sync-migration.test.ts`; require failure before the validator exists.
-- [ ] Append the donor's three sync table definitions under the new actual migration version, using create-if-absent followed by shape validation. Invoke validation before the transaction's `PRAGMA user_version` update; reject incompatible shapes without rebuilding them. Existing `runMigrations` already wraps noninitial versions in a transaction: preserve that structure.
+- [x] Append the donor's three sync table definitions under the new actual migration version, using create-if-absent followed by shape validation. Invoke validation before the transaction's `PRAGMA user_version` update; reject incompatible shapes without rebuilding them. Existing `runMigrations` already wraps noninitial versions in a transaction: preserve that structure.
 
 ```ts
 await db.withTransactionAsync(async () => {
@@ -77,8 +77,8 @@ await db.withTransactionAsync(async () => {
 ```
 
 Define `SYNC_MIGRATION_INDEX` in `playlist-sync-schema.ts` from the version pinned in task 1 and import it in db/tests. Never use the moving last-array index in historical tests.
-- [ ] Inject failure during DDL, validation and version checkpoint; reopen and compare rows/blobs and user_version to the pre-upgrade snapshot. Run new migration tests and existing schema tests. Expected: data preserved, no partial version advance, idempotent reopen.
-- [ ] Commit schema, validator and tests only. Deliverable: safe integration schema, C9 source evidence.
+- [x] Inject failure during DDL, validation and version checkpoint; reopen and compare rows/blobs and user_version to the pre-upgrade snapshot. Run new migration tests and existing schema tests. Expected: data preserved, no partial version advance, idempotent reopen.
+- [x] Commit schema, validator and tests only. Deliverable: safe integration schema, C9 source evidence.
 
 ### Task 3: Port protocol, persistence and transport into the new phone tree
 
@@ -86,7 +86,7 @@ Define `SYNC_MIGRATION_INDEX` in `playlist-sync-schema.ts` from the version pinn
 
 **Interfaces:** Preserve donor `PlaylistTransport.verify/upload/list/download/discoverTrack`, `syncPlaylists(transport?): Promise<void>`, `savePairing`, `recordDiscovery`, `pendingDownloads`, `materializeIntent`, `pendingUploads`, `ingestRevision` and `projectPlaylist`. Preserve P's current mutation/media-claims APIs rather than donor versions of them.
 
-- [ ] Port tests first. Extend the existing store setup's `shared()` fixture with exact-byte collision:
+- [x] Port tests first. Extend the existing store setup's `shared()` fixture with exact-byte collision:
 
 ```ts
 const crate = await shared();
@@ -96,10 +96,10 @@ await expect(ingestRevision(body + ' ')).rejects.toThrow('collision');
 expect((await pendingUploads())[0].body).toBe(body);
 ```
 
-- [ ] Run `phone_test src/playlist-sync/__tests__/store.test.ts` and `phone_test src/playlist-sync/__tests__/dropbox.test.ts`; require failures at absent adapters/imports before porting implementation.
-- [ ] Integrate modules without bypassing current `mutateLibrary`, canonical identity and media-claims boundaries. Preserve path/library identity validation, App Folder `/` evidence, strict add/no-autorename, 32-parent chains, download-before-cursor obligations and exact bytes. Copy only the credential behavior needed for the explicit pinned metadata transport; do not replace the current audio provider.
-- [ ] Extend fake transport tests: wrong descriptor causes zero uploads; specific App Folder probe permits only its documented fallback; generic 400 never does; cursor reset retains crates; child before parent stays pending; upload retry uses original bytes. Run protocol/store/dropbox/coordinator suites and `mac_test DropboxPlaylistTransportTests`.
-- [ ] Commit scoped integration. Deliverable: v1 feature works behind the existing fake transport in the latest phone schema, C1/C5/C6/C7 source coverage.
+- [x] Run `phone_test src/playlist-sync/__tests__/store.test.ts` and `phone_test src/playlist-sync/__tests__/dropbox.test.ts`; require failures at absent adapters/imports before porting implementation.
+- [x] Integrate modules without bypassing current `mutateLibrary`, canonical identity and media-claims boundaries. Preserve path/library identity validation, App Folder `/` evidence, strict add/no-autorename, 32-parent chains, download-before-cursor obligations and exact bytes. Copy only the credential behavior needed for the explicit pinned metadata transport; do not replace the current audio provider.
+- [x] Extend fake transport tests: wrong descriptor causes zero uploads; specific App Folder probe permits only its documented fallback; generic 400 never does; cursor reset retains crates; child before parent stays pending; upload retry uses original bytes. Run protocol/store/dropbox/coordinator suites and `mac_test DropboxPlaylistTransportTests`.
+- [x] Commit scoped integration. Deliverable: v1 feature works behind the existing fake transport in the latest phone schema, C1/C5/C6/C7 source coverage.
 
 ### Task 4: Capture every current explicit crate edit atomically
 
@@ -107,7 +107,7 @@ expect((await pendingUploads())[0].body).toBe(body);
 
 **Interfaces:** Existing donor `captureCrateIn(db, crateId, deleted?, edit?): Promise<void>` stays transaction-local. `edit.removedIds` contains only proven explicit user removals; `renameOnly` retains the full prior wire list. Notifications fire after commit. Undo must return its actual successful ownership result before capture.
 
-- [ ] Parameterize current editor, rename/delete, ordinary add/remove/reorder, queue bulk creation, triage, Browse Add/Undo and rule Add/Undo tests. Seed a shared crate with one unresolved wire ref and assert after each command:
+- [x] Parameterize current editor, rename/delete, ordinary add/remove/reorder, queue bulk creation, triage, Browse Add/Undo and rule Add/Undo tests. Seed a shared crate with one unresolved wire ref and assert after each command:
 
 ```ts
 const state = await readState(crate.id);
@@ -116,10 +116,10 @@ expect(state!.intent!.generation).toBeGreaterThan(beforeGeneration);
 ```
 
 `crate` and `beforeGeneration` are captured by each existing command test's fixture before invoking its real writer. For a failed or no-longer-owned Undo, assert the intent/generation equals its pre-command snapshot and outgoing notification count is zero.
-- [ ] Run focused changed writer suites and the sync store suite; prove a newly covered writer currently lacks capture.
-- [ ] Insert capture inside each owning transaction after final membership is known and before commit. For delete, capture the tombstone before removing the native crate row. Preserve Browse/rule ownership tokens; skipped tracks never remove membership. Scanner removal/canonical promotion only changes mappings/projection. Network/mapping awaits remain outside DB locks.
-- [ ] Inject rollback into membership+capture and into ownership transfer; assert neither native state nor intent commits. Race mapping with a newer edit and verify materialization rejects the older generation. Confirm one blocked crate does not stall another.
-- [ ] Commit writer changes and tests. Deliverable: C3/C4/C5/C7/C8 transactional behavior through the current production entry points.
+- [x] Run focused changed writer suites and the sync store suite; prove a newly covered writer currently lacks capture.
+- [x] Insert capture inside each owning transaction after final membership is known and before commit. For delete, capture the tombstone before removing the native crate row. Preserve Browse/rule ownership tokens; skipped tracks never remove membership. Scanner removal/canonical promotion only changes mappings/projection. Network/mapping awaits remain outside DB locks.
+- [x] Inject rollback into membership+capture and into ownership transfer; assert neither native state nor intent commits. Race mapping with a newer edit and verify materialization rejects the older generation. Confirm one blocked crate does not stall another.
+- [x] Commit writer changes and tests. Deliverable: C3/C4/C5/C7/C8 transactional behavior through the current production entry points.
 
 ### Task 5: Protect current editors and native projections
 
@@ -127,7 +127,7 @@ expect(state!.intent!.generation).toBeGreaterThan(beforeGeneration);
 
 **Interfaces:** Extend current `CrateEditSnapshot` with the donor sync token rather than replacing its canonical membership conflict checks. `syncTokenIn(db, crateId)` includes invisible wire/mapping generation; existing `saveCrateEdit({ baseline, name, orderedTrackIds })` remains the command.
 
-- [ ] Add this assertion after the existing fixture receives an extra unresolved reference:
+- [x] Add this assertion after the existing fixture receives an extra unresolved reference:
 
 ```ts
 await expect(saveCrateEdit({ baseline, name: 'stale', orderedTrackIds: [] }))
@@ -135,10 +135,10 @@ await expect(saveCrateEdit({ baseline, name: 'stale', orderedTrackIds: [] }))
 expect(await readState(crate.id)).toEqual(stateAfterIncoming);
 ```
 
-- [ ] Run `phone_test src/library/__tests__/crate-edit.test.ts` and `mac_test PlaylistSyncTests`.
-- [ ] Check the sync token inside the save transaction; suppress echo during remote apply; materialize existing intent before projection or retain the incoming revision as pending when mapping blocks it. Reorder alias groups while keeping unresolved slots; explicit removal drops exactly the captured visible group.
-- [ ] Test Cancel writes zero rows; alias promotion stales a draft; source deletion never truncates wire membership; incoming state preserves local_uri/media ownership and native cache invalidation. Run both platforms' relevant suites.
-- [ ] Commit. Deliverable: editors cannot overwrite invisible incoming state, C7/C8.
+- [x] Run `phone_test src/library/__tests__/crate-edit.test.ts` and `mac_test PlaylistSyncTests`.
+- [x] Check the sync token inside the save transaction; suppress echo during remote apply; materialize existing intent before projection or retain the incoming revision as pending when mapping blocks it. Reorder alias groups while keeping unresolved slots; explicit removal drops exactly the captured visible group.
+- [x] Test Cancel writes zero rows; alias promotion stales a draft; source deletion never truncates wire membership; incoming state preserves local_uri/media ownership and native cache invalidation. Run both platforms' relevant suites.
+- [x] Commit. Deliverable: editors cannot overwrite invisible incoming state, C7/C8.
 
 ### Task 6: Expose connection, sharing, conflict and recovery in current native shells
 
@@ -146,11 +146,11 @@ expect(await readState(crate.id)).toEqual(stateAfterIncoming);
 
 **Interfaces:** Status UI consumes donor `SharedState`/`SyncStatus`; actions use share/sync/disconnect/resolve services, never direct SQL. Mac uses existing `connect`, `pair(remotePath:)`, `share`, `syncNow` and conflict methods. Keep native menus and existing settings layout.
 
-- [ ] Add async component tests using awaited render/unmount: for `intent !== null`, expect **Changes waiting to sync**; for a conflict, **Changes on both devices**; assert tapping Review changes dispatches once with the currently displayed head set. Fixture `SharedState` comes from the real shared-store setup, not a hand-built partial cast.
-- [ ] Run `phone_test src/components/crates/__tests__/shared-crate-status.test.tsx`; require absent UI/action failures.
-- [ ] Implement every state/action in spec 01's table, full conflict versions and delete-versus-edit; show unavailable counts independently of synced metadata. Add per-crate explicit Share with Mac/iPhone, exclude smart/radio/built-ins, retain state on disconnect. Wire foreground and postcommit edits through existing 400–500ms debounce.
-- [ ] Verify keyboard/focus, native sheet dismissal, stale-head refresh, zero writes on Cancel and exact destructive-delete wording. Move backend IDs/root details behind Details. Run focused tests and compare baseline screens.
-- [ ] Commit. Deliverable: feature is reachable from accepted native UI with no unrelated redesign, C2/C6/C10.
+- [x] Add async component tests using awaited render/unmount: for `intent !== null`, expect **Changes waiting to sync**; for a conflict, **Changes on both devices**; assert tapping Review changes dispatches once with the currently displayed head set. Fixture `SharedState` comes from the real shared-store setup, not a hand-built partial cast.
+- [x] Run `phone_test src/components/crates/__tests__/shared-crate-status.test.tsx`; require absent UI/action failures.
+- [x] Implement every state/action in spec 01's table, full conflict versions and delete-versus-edit; show unavailable counts independently of synced metadata. Add per-crate explicit Share with Mac/iPhone, exclude smart/radio/built-ins, retain state on disconnect. Wire foreground and postcommit edits through existing 400–500ms debounce.
+- [ ] Hands-on keyboard/focus/native-sheet and rendered baseline comparison remain open under C10. Source stale-head/Cancel/delete-copy/Details behavior and focused tests pass; this checkbox does not infer native UX from tests.
+- [x] Commit. Deliverable: feature is reachable from accepted native UI with no unrelated redesign, C2/C6/C10.
 
 ### Task 7: Complete milestone 1 acceptance
 
@@ -161,3 +161,7 @@ expect(await readState(crate.id)).toEqual(stateAfterIncoming);
 - [ ] Use one real mapped three-track crate for C1–C3, then C4 Digging/queue edits, C5 offline+restart, C6 concurrent/delete conflicts, C7 missing/moved/alias audio. Record both directions and actual played recordings. Do not manipulate the user's other crates as fixtures.
 - [ ] Confirm C8–C10 regression/source evidence, UI comparison and owner acceptance; retain all failed cases as open checkboxes.
 - [ ] Commit the acceptance receipt when accurate. No push/merge/release is implied. Milestone 1 completes only with the spec's required live evidence.
+
+## Execution checkpoint
+
+Plan1 source implementation and final two-axis review passed; Mac39passed/1existing skip, phone2691passed/1existing skip. No later milestone implemented. Live C1–C7, native owner checks and fresh backed-up installation remain open; phone locked at preflight. See docs/verification/connected-crate/01-connection.md. Do not mark milestone complete from source/build evidence.

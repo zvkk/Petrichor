@@ -119,7 +119,11 @@ extension PlaylistSyncTests {
             var graphCases: [GraphCase]
         }
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        let fixture = try JSONDecoder().decode(Fixtures.self, from: Data(contentsOf: root.appendingPathComponent("docs/fixtures/dropbox-playlist-protocol.json")))
+        // An isolated sandboxed test host may not have Desktop access. CI can supply
+        // a byte-identical fixture copy without granting access to the user's folders.
+        let fixtureURL = ProcessInfo.processInfo.environment["CRATE_SYNC_FIXTURE_PATH"].map { URL(fileURLWithPath: $0) }
+            ?? root.appendingPathComponent("docs/fixtures/dropbox-playlist-protocol.json")
+        let fixture = try JSONDecoder().decode(Fixtures.self, from: Data(contentsOf: fixtureURL))
         for item in fixture.validationCases {
             let data = try JSONEncoder().encode(item.revision)
             if item.valid { XCTAssertNoThrow(try PlaylistRevision.decode(data), item.name) }
@@ -349,5 +353,77 @@ extension PlaylistSyncTests {
         XCTAssertEqual(manager.loadAllPlaylists().first { $0.id == good.localID }?.name, healthy.name)
         XCTAssertEqual(try manager.syncRevisions(shared).count, 2)
         XCTAssertTrue(try manager.syncOutbox().isEmpty)
+    }
+}
+
+
+extension PlaylistSyncTests {
+    func testMetadataSyncedAndUnavailableAudioAreIndependent() {
+        let state = SyncPlaylistState(localID: UUID(), sharedID: UUID().uuidString, generation: 1,
+            heads: ["head"], members: [SyncMember(fileId: "id:missing", localTrackID: nil)],
+            intent: nil, appliedHead: "head", issue: nil)
+        XCTAssertEqual(CrateSyncPresentation.summary(state: state, connected: true, working: false, queued: false), "Crate synced")
+        XCTAssertEqual(CrateSyncPresentation.unavailable(state), 1)
+        XCTAssertEqual(CrateSyncPresentation.summary(state: state, connected: true, working: false, queued: true), "Changes waiting to sync")
+    }
+    func testPendingIntentAndConflictTakePrecedenceOverSynced() {
+        var state = SyncPlaylistState(localID: UUID(), sharedID: UUID().uuidString, generation: 1,
+            heads: [], members: [], intent: SyncIntent(generation: 1, name: "Draft", deleted: false,
+                members: [SyncMember(fileId: nil, localTrackID: 42)], parents: []), appliedHead: nil, issue: "mapping")
+        XCTAssertEqual(CrateSyncPresentation.summary(state: state, connected: true, working: false, queued: false), "Changes waiting to sync")
+        XCTAssertEqual(CrateSyncPresentation.needsAdding(state), 1)
+        state.issue = "conflict"
+        XCTAssertEqual(CrateSyncPresentation.summary(state: state, connected: true, working: false, queued: false), "Changes on both devices")
+        XCTAssertEqual(CrateSyncPresentation.summary(state: state, connected: false, working: false, queued: false), "Reconnect Dropbox")
+        XCTAssertEqual(CrateSyncPresentation.summary(state: nil, connected: false, working: false, queued: false), "Connect Dropbox to share this crate")
+    }
+    func testConflictChoiceRejectsStaleHeadsWithoutWrites() throws {
+        let first = revision(parents: [])
+        let second = revision(parents: [], playlist: first.playlistId, library: first.libraryId)
+        for item in [first, second] { try manager.receiveSyncRevision(JSONEncoder().encode(item), path: item.path, library: item.libraryId) }
+        try manager.projectSyncRevisions()
+        let state = try XCTUnwrap(manager.syncStates().first)
+        let third = revision(parents: [second.revisionId], playlist: first.playlistId, library: first.libraryId)
+        try manager.receiveSyncRevision(JSONEncoder().encode(third), path: third.path, library: third.libraryId)
+        XCTAssertThrowsError(try manager.resolveSyncConflict(localID: state.localID, chosen: first.revisionId, expectedHeads: state.heads))
+        XCTAssertTrue(try manager.syncOutbox().isEmpty)
+        XCTAssertEqual(try manager.syncRevisions(first.playlistId).count, 3)
+    }
+}
+
+extension PlaylistSyncTests {
+    func testKeepBothRejectsSameOrNonHeadCopyAtomically() throws {
+        let ancestor = revision(parents: [])
+        let first = revision(parents: [ancestor.revisionId], playlist: ancestor.playlistId, library: ancestor.libraryId)
+        let second = revision(parents: [ancestor.revisionId], playlist: ancestor.playlistId, library: ancestor.libraryId)
+        for item in [ancestor, first, second] { try manager.receiveSyncRevision(JSONEncoder().encode(item), path: item.path, library: item.libraryId) }
+        try manager.projectSyncRevisions()
+        let state = try XCTUnwrap(manager.syncStates().first)
+        XCTAssertThrowsError(try manager.resolveSyncConflict(localID: state.localID, chosen: first.revisionId,
+            expectedHeads: state.heads, keepBoth: ancestor.revisionId))
+        XCTAssertTrue(try manager.syncOutbox().isEmpty)
+        XCTAssertThrowsError(try manager.resolveSyncConflict(localID: state.localID, chosen: first.revisionId,
+            expectedHeads: state.heads, keepBoth: first.revisionId))
+        XCTAssertTrue(try manager.syncOutbox().isEmpty)
+    }
+}
+
+extension PlaylistSyncTests {
+    func testDeleteVersusEditKeepBothRetainsLiveCopyAndTombstone() throws {
+        var removed = revision(parents: [])
+        removed.deleted = true
+        var edited = revision(parents: [], playlist: removed.playlistId, library: removed.libraryId)
+        edited.name = "Surviving edit"
+        edited.tracks = [DropboxTrackReference(fileId: "id:unavailable")]
+        for item in [removed, edited] { try manager.receiveSyncRevision(JSONEncoder().encode(item), path: item.path, library: item.libraryId) }
+        try manager.projectSyncRevisions()
+        let state = try XCTUnwrap(manager.syncStates().first)
+        try manager.resolveSyncConflict(localID: state.localID, chosen: removed.revisionId, expectedHeads: state.heads, keepBoth: edited.revisionId)
+        let queued = try manager.syncOutbox().map { try PlaylistRevision.decode($0.1) }
+        XCTAssertEqual(queued.count, 2)
+        XCTAssertTrue(try XCTUnwrap(queued.first { $0.playlistId == removed.playlistId }).deleted)
+        let copy = try XCTUnwrap(queued.first { $0.playlistId != removed.playlistId })
+        XCTAssertEqual(copy.tracks, edited.tracks)
+        XCTAssertEqual(copy.name, "Surviving edit (conflict copy)")
     }
 }

@@ -34,7 +34,11 @@ struct PlaylistSidebarView: View {
             }
         } message: {
             if let playlist = playlistToDelete {
-                Text("Are you sure you want to delete \"\(DefaultPlaylists.displayName(for: playlist))\"? This action cannot be undone.")
+                if (try? libraryManager.databaseManager.syncStates().contains(where: { $0.localID == playlist.id })) == true {
+                    Text("This crate will be removed on both devices after sync. Music files remain.")
+                } else {
+                    Text("Are you sure you want to delete \"\(DefaultPlaylists.displayName(for: playlist))\"? This action cannot be undone.")
+                }
             }
         }
         .onAppear {

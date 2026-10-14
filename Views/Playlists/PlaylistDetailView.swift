@@ -226,6 +226,9 @@ struct PlaylistDetailView: View {
                 .lineLimit(2)
 
             if let playlist = playlist {
+                if playlist.type == .regular && playlist.isUserEditable && playlist.isContentEditable {
+                    SharedCrateStatusButton(playlistID: playlist.id)
+                }
                 HStack {
                     Text(isStationCollection
                         ? String(localized: "\(playlist.trackCount) stations")

@@ -12,7 +12,7 @@ enum Sections: String, CaseIterable, Identifiable {
         switch self {
         case .home: return String(localized: "Home")
         case .library: return String(localized: "Library")
-        case .playlists: return String(localized: "Playlists")
+        case .playlists: return String(localized: "Crates")
         case .folders: return String(localized: "Folders")
         }
     }

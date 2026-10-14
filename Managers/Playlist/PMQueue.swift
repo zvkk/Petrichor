@@ -20,6 +20,7 @@ extension PlaylistManager {
     }
 
     func createLibraryQueue() {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         guard let library = libraryManager else { return }
         currentQueue = library.tracks
         currentPlaylist = nil
@@ -32,6 +33,7 @@ extension PlaylistManager {
     }
 
     func clearQueue() {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         AppCoordinator.shared?.cancelPlaybackRestoration()
         currentQueue.removeAll()
         currentQueueIndex = -1
@@ -47,6 +49,7 @@ extension PlaylistManager {
     }
 
     func playNext(_ track: Track) {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         AppCoordinator.shared?.cancelPlaybackRestoration()
         // A standby queue (entries but no cursor, as radio and Clear Queue leave it) takes
         // an insertion at the front; only a genuinely empty one is initialised.
@@ -97,6 +100,7 @@ extension PlaylistManager {
     }
 
     func addToQueue(_ track: Track) {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         AppCoordinator.shared?.cancelPlaybackRestoration()
         if !currentQueue.isEmpty, currentQueueIndex < 0 {
             stageInStandbyQueue(track, atFront: false)
@@ -122,6 +126,7 @@ extension PlaylistManager {
     }
 
     func removeFromQueue(at index: Int) {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         AppCoordinator.shared?.cancelPlaybackRestoration()
         guard index >= 0 && index < currentQueue.count else { return }
 
@@ -152,6 +157,7 @@ extension PlaylistManager {
     }
 
     func moveInQueue(from sourceIndex: Int, to destinationIndex: Int) {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         AppCoordinator.shared?.cancelPlaybackRestoration()
         guard sourceIndex >= 0, sourceIndex < currentQueue.count,
               destinationIndex >= 0, destinationIndex < currentQueue.count,
@@ -174,6 +180,7 @@ extension PlaylistManager {
     }
 
     func playFromQueue(at index: Int) {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         AppCoordinator.shared?.cancelPlaybackRestoration()
         guard index >= 0 && index < currentQueue.count else { return }
 
@@ -183,6 +190,7 @@ extension PlaylistManager {
 
     /// Shuffles the upcoming entries, leaving played ones and the current track put.
     internal func shuffleCurrentQueue() {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         guard !currentQueue.isEmpty else { return }
 
         guard let audioPlayer, audioPlayer.hasMirroredQueue else {

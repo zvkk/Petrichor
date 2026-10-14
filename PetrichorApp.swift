@@ -24,6 +24,7 @@ struct PetrichorApp: App {
     private var internetRadioEnabled = true
 
     @State private var menuUpdateTrigger = UUID()
+    @FocusedValue(\.previewSelection) private var previewSelection
     @Environment(\.openWindow)
     private var openWindow
 
@@ -220,9 +221,9 @@ extension PetrichorApp {
                 exportPlaylistsMenuItem()
             } label: {
                 if #available(macOS 26.0, *) {
-                    Label("Playlists", systemImage: Icons.musicNoteList)
+                    Label("Crates", systemImage: Icons.musicNoteList)
                 } else {
-                    Text("Playlists")
+                    Text("Crates")
                 }
             }
             
@@ -271,9 +272,9 @@ extension PetrichorApp {
             appCoordinator.playlistManager.showCreatePlaylistModal()
         } label: {
             if #available(macOS 26.0, *) {
-                Label("Playlist", systemImage: Icons.musicNoteList)
+                Label("Crate", systemImage: Icons.musicNoteList)
             } else {
-                Text("Playlist")
+                Text("Crate")
             }
         }
         .keyboardShortcut("n", modifiers: .command)
@@ -301,9 +302,9 @@ extension PetrichorApp {
             )
         } label: {
             if #available(macOS 26.0, *) {
-                Label("Playlist from Selection", systemImage: Icons.musicNoteList)
+                Label("Crate from selection", systemImage: Icons.musicNoteList)
             } else {
-                Text("Playlist from Selection")
+                Text("Crate from selection")
             }
         }
         .keyboardShortcut("n", modifiers: [.command, .shift])
@@ -344,9 +345,9 @@ extension PetrichorApp {
             NotificationCenter.default.post(name: .importPlaylists, object: nil)
         } label: {
             if #available(macOS 26.0, *) {
-                Label("Import Playlists", systemImage: "square.and.arrow.down")
+                Label("Import crates", systemImage: "square.and.arrow.down")
             } else {
-                Text("Import Playlists")
+                Text("Import crates")
             }
         }
     }
@@ -356,9 +357,9 @@ extension PetrichorApp {
             NotificationCenter.default.post(name: .exportPlaylists, object: nil)
         } label: {
             if #available(macOS 26.0, *) {
-                Label("Export Playlists", systemImage: "square.and.arrow.up")
+                Label("Export crates", systemImage: "square.and.arrow.up")
             } else {
-                Text("Export Playlists")
+                Text("Export crates")
             }
         }
     }
@@ -369,6 +370,12 @@ extension PetrichorApp {
     private func playbackMenuCommands() -> some Commands {
         CommandMenu("Playback") {
             playPauseMenuItem()
+            Button("Preview") {
+                guard let track = previewCommandTrack else { return }
+                appCoordinator.playbackManager.previewSession.begin(track: track)
+            }
+            .keyboardShortcut(.return, modifiers: .option)
+            .disabled(previewCommandTrack == nil)
             favoriteMenuItem()
             
             Divider()
@@ -386,6 +393,14 @@ extension PetrichorApp {
         }
     }
     
+    private var previewCommandTrack: Track? {
+        // Validate at invocation too: AppKit can keep a menu's enabled state cached.
+        if PreviewCommandPolicy.hasEditableFocus { return nil }
+        guard let selected = previewSelection, selected.count == 1, let track = selected.first,
+              appCoordinator.playbackManager.canPreview(track) else { return nil }
+        return track
+    }
+
     private func playPauseMenuItem() -> some View {
         Button {
             if appCoordinator.playbackManager.hasPlayableContent {
@@ -486,7 +501,7 @@ extension PetrichorApp {
             }
         }
         .keyboardShortcut(.rightArrow, modifiers: .command)
-        .disabled(appCoordinator.playbackManager.currentTrack == nil)
+        .disabled(appCoordinator.playbackManager.currentTrack == nil || appCoordinator.playbackManager.isPreviewing)
     }
     
     private func previousMenuItem() -> some View {
@@ -503,7 +518,7 @@ extension PetrichorApp {
             }
         }
         .keyboardShortcut(.leftArrow, modifiers: .command)
-        .disabled(appCoordinator.playbackManager.currentTrack == nil)
+        .disabled(appCoordinator.playbackManager.currentTrack == nil || appCoordinator.playbackManager.isPreviewing)
     }
     
     private func seekForwardMenuItem() -> some View {

@@ -124,6 +124,13 @@ enum TrackContextMenu {
             }
         })
         
+        items.append(.button(title: String(localized: "Preview"), icon: "play.circle",
+                             isEnabled: playlistManager.audioPlayer?.canPreview(track) == true && !PreviewCommandPolicy.hasEditableFocus) {
+            guard let player = playlistManager.audioPlayer, player.canPreview(track),
+                  !PreviewCommandPolicy.hasEditableFocus else { return }
+            MainActor.assumeIsolated { player.previewSession.begin(track: track) }
+        })
+
         // Play Next
         items.append(.button(title: String(localized: "Play Next"), icon: "text.line.first.and.arrowtriangle.forward") {
             playlistManager.playNext(track)
@@ -283,7 +290,7 @@ enum TrackContextMenu {
         var playlistItems: [ContextMenuItem] = []
         
         // Create new playlist item
-        playlistItems.append(.button(title: String(localized: "New Playlist...")) {
+        playlistItems.append(.button(title: String(localized: "New crate...")) {
             playlistManager.showCreatePlaylistModal(with: [track])
         })
         
@@ -310,7 +317,7 @@ enum TrackContextMenu {
             }
         }
         
-        items.append(.menu(title: String(localized: "Add to Playlist"), icon: "text.badge.plus", items: playlistItems))
+        items.append(.menu(title: String(localized: "Add to crate"), icon: "text.badge.plus", items: playlistItems))
         
         items.append(
             .button(
@@ -332,7 +339,7 @@ enum TrackContextMenu {
         let playlists = playlistManager.playlists.filter { $0.type == .regular }
         var playlistItems: [ContextMenuItem] = []
         
-        playlistItems.append(.button(title: String(localized: "New Playlist...")) {
+        playlistItems.append(.button(title: String(localized: "New crate...")) {
             playlistManager.showCreatePlaylistModal(with: tracks)
         })
         
@@ -348,7 +355,7 @@ enum TrackContextMenu {
             }
         }
         
-        items.append(.menu(title: String(localized: "Add to Playlist"), icon: "text.badge.plus", items: playlistItems))
+        items.append(.menu(title: String(localized: "Add to crate"), icon: "text.badge.plus", items: playlistItems))
         
         let allFavorited = tracks.allSatisfy { $0.isFavorite }
         let title = allFavorited ? String(localized: "Remove from Favorites") : String(localized: "Add to Favorites")
@@ -357,7 +364,7 @@ enum TrackContextMenu {
         })
         
         if case .playlist(let playlist) = currentContext, playlist.type == .regular {
-            items.append(.button(title: String(localized: "Remove from Playlist"), icon: Icons.trash, role: .destructive) {
+            items.append(.button(title: String(localized: "Remove from crate"), icon: Icons.trash, role: .destructive) {
                 Task {
                     await playlistManager.removeTracksFromPlaylist(tracks: tracks, playlistID: playlist.id)
                 }
@@ -386,7 +393,7 @@ enum TrackContextMenu {
             
         case .playlist(let playlist):
             if playlist.type == .regular {
-                items.append(.button(title: String(localized: "Remove from Playlist"), icon: Icons.trash, role: .destructive) {
+                items.append(.button(title: String(localized: "Remove from crate"), icon: Icons.trash, role: .destructive) {
                     playlistManager.removeTrackFromPlaylist(
                         track: track,
                         playlistID: playlist.id
@@ -413,7 +420,7 @@ struct ContextMenuItemView: View {
     
     var body: some View {
         switch item {
-        case .button(_, _, _, let action):
+        case .button(_, _, _, let isEnabled, let action):
             Button(action: action) {
                 HStack {
                     if let icon = item.icon {
@@ -425,6 +432,7 @@ struct ContextMenuItemView: View {
                 }
             }
             .buttonStyle(.plain)
+            .disabled(!isEnabled)
             
         case .menu(_, _, let items):
             Menu {

@@ -101,10 +101,12 @@ struct PetrichorShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: PlayPlaylistIntent(),
             phrases: [
+                "Play the crate \(\.$playlist) in \(.applicationName)",
+                "Play crate \(\.$playlist) in \(.applicationName)",
                 "Play the playlist \(\.$playlist) in \(.applicationName)",
                 "Play playlist \(\.$playlist) in \(.applicationName)"
             ],
-            shortTitle: "Play Playlist",
+            shortTitle: "Play Crate",
             systemImageName: "music.note.list"
         )
     }

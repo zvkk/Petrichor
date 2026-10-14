@@ -12,13 +12,20 @@ enum PlaylistMenuBuilder {
     ) -> [ContextMenuItem] {
         var items: [ContextMenuItem] = [playlistManager.createPinContextMenuItem(for: playlist)]
 
+        if playlist.type != .stations {
+            items.append(.divider)
+            items.append(.button(title: String(localized: "Copy tracklist")) { playlistManager.exportCrate(playlistID: playlist.id, format: .tracklist, copy: true) })
+            items.append(.button(title: String(localized: "Save tracklist…")) { playlistManager.exportCrate(playlistID: playlist.id, format: .tracklist) })
+            items.append(.button(title: String(localized: "Export to Rekordbox…")) { playlistManager.exportCrate(playlistID: playlist.id, format: .rekordbox) })
+        }
+
         guard playlist.isUserEditable else { return items }
 
         items.append(.divider)
 
         // "Edit" opens the editor sheet for both kinds (rules for smart, contents for regular);
         // the label is kept identical for consistency.
-        items.append(.button(title: String(localized: "Edit")) {
+        items.append(.button(title: (playlist.type == .stations ? String(localized: "Edit") : String(localized: "Edit crate"))) {
             switch playlist.type {
             case .smart:
                 playlistManager.showEditSmartPlaylistModal(playlist)
@@ -43,7 +50,7 @@ enum PlaylistMenuBuilder {
 
         items.append(.divider)
 
-        items.append(.button(title: String(localized: "Delete"), role: .destructive) {
+        items.append(.button(title: (playlist.type == .stations ? String(localized: "Delete") : String(localized: "Delete crate")), role: .destructive) {
             onDelete()
         })
 

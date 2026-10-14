@@ -28,7 +28,7 @@ struct NowPlayingControlsView: View {
 
     /// A stream is not part of the queue these act on.
     private var transportDisabled: Bool {
-        playbackManager.isTransportDisabled
+        playbackManager.isTransportDisabled || playbackManager.isPreviewing
     }
 
     var body: some View {

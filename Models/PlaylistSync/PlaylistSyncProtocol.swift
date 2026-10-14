@@ -6,12 +6,12 @@ enum PlaylistSyncError: LocalizedError {
     case transport(Int), authentication, writePermission, configuration, cancelled
     var errorDescription: String? {
         switch self {
-        case .invalidRevision: return "Unsupported or invalid playlist revision."
+        case .invalidRevision: return "Unsupported or invalid crate revision."
         case .integrity: return "A revision ID has different stored contents. Sync stopped to preserve both versions."
-        case .incomplete: return "Waiting for missing playlist revisions."
-        case .conflict: return "This playlist has conflicting versions. Choose a version to continue."
-        case .staleEditor: return "This playlist changed while the editor was open. Your draft is still here; reopen the editor to refresh."
-        case .mappingBlocked: return "Some local songs could not be verified in the paired Dropbox music folder. No shortened playlist was sent."
+        case .incomplete: return "Waiting for missing crate revisions."
+        case .conflict: return "This crate has conflicting versions. Choose a version to continue."
+        case .staleEditor: return "This crate changed while the editor was open. Your draft is still here; reopen the editor to refresh."
+        case .mappingBlocked: return "Some local songs could not be verified in the paired Dropbox music folder. No shortened crate was sent."
         case .notPaired: return "Connect Dropbox and pair a music folder first."
         case .pairingChanged: return "The Dropbox account or paired music folder changed. Existing pending changes are retained."
         case .transport(let code): return "Dropbox request failed (HTTP \(code)). Retry Sync Now."

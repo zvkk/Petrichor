@@ -42,7 +42,7 @@ struct PlaylistArtworkSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PlaylistEditorHeader(title: String(localized: "Choose Playlist Artwork")) {
+            PlaylistEditorHeader(title: String(localized: "Choose crate artwork")) {
                 guard !isSaving else { return }
                 isPresented = false
             }
@@ -55,7 +55,7 @@ struct PlaylistArtworkSheet: View {
                     isProcessing: $isProcessingArtwork,
                     placeholderIcon: Icons.defaultPlaylistIcon(for: playlist),
                     secondaryActionTitle: String(localized: "Reshuffle"),
-                    secondaryActionHelp: String(localized: "Create a new collage from playlist items"),
+                    secondaryActionHelp: String(localized: "Create a new collage from crate items"),
                     onSecondaryAction: reshuffle,
                     onImported: markCustomImport,
                     showsClearButton: shouldPersistArtwork,

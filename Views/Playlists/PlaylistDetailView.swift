@@ -360,7 +360,7 @@ struct PlaylistDetailView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.gray)
 
-            Text("Playlist not found")
+            Text("Crate not found")
                 .font(.headline)
                 .foregroundColor(.secondary)
         }
@@ -380,16 +380,16 @@ struct PlaylistDetailView: View {
 
         switch playlist.type {
         case .smart:
-            return String(localized: "SMART PLAYLIST")
+            return String(localized: "SMART CRATE")
         case .regular:
-            return String(localized: "PLAYLIST")
+            return String(localized: "CRATE")
         case .stations:
             return String(localized: "STATION COLLECTION")
         }
     }
 
     private var emptyStateTitle: String {
-        guard let playlist = playlist else { return String(localized: "Empty Playlist") }
+        guard let playlist = playlist else { return String(localized: "Empty crate") }
 
         return DefaultPlaylists.noSongsText(for: playlist)
     }

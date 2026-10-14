@@ -55,7 +55,7 @@ class AppCoordinator: ObservableObject {
     }
 
     func savePlaybackState(synchronous: Bool) {
-        guard playbackManager.restoredUITrack == nil else { return }
+        guard playbackManager.restoredUITrack == nil, playbackManager.canPersistOrdinarySession else { return }
         guard let session = makeSession() else {
             sessionStore.clear()
             return

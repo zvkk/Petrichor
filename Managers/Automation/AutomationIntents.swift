@@ -308,11 +308,11 @@ struct PlayYearIntent: AppIntent {
 }
 
 struct PlayPlaylistIntent: AppIntent {
-    static var title: LocalizedStringResource = "Play Playlist"
-    static var description = IntentDescription("Plays a playlist in Petrichor.")
+    static var title: LocalizedStringResource = "Play Crate"
+    static var description = IntentDescription("Plays a crate in Petrichor.")
     static var openAppWhenRun = true
 
-    @Parameter(title: "Playlist")
+    @Parameter(title: "Crate")
     var playlist: PlaylistAppEntity
 
     @MainActor
@@ -355,11 +355,11 @@ struct PlayAlbumNextIntent: AppIntent {
 }
 
 struct AddPlaylistToQueueIntent: AppIntent {
-    static var title: LocalizedStringResource = "Add Playlist to Queue"
-    static var description = IntentDescription("Adds a playlist to the end of the queue in Petrichor.")
+    static var title: LocalizedStringResource = "Add Crate to Queue"
+    static var description = IntentDescription("Adds a crate to the end of the queue in Petrichor.")
     static var openAppWhenRun = true
 
-    @Parameter(title: "Playlist")
+    @Parameter(title: "Crate")
     var playlist: PlaylistAppEntity
 
     @MainActor
@@ -370,11 +370,11 @@ struct AddPlaylistToQueueIntent: AppIntent {
 }
 
 struct PlayPlaylistNextIntent: AppIntent {
-    static var title: LocalizedStringResource = "Play Playlist Next"
-    static var description = IntentDescription("Queues a playlist to play next in Petrichor.")
+    static var title: LocalizedStringResource = "Play Crate Next"
+    static var description = IntentDescription("Queues a crate to play next in Petrichor.")
     static var openAppWhenRun = true
 
-    @Parameter(title: "Playlist")
+    @Parameter(title: "Crate")
     var playlist: PlaylistAppEntity
 
     @MainActor

@@ -198,8 +198,8 @@ struct ContentView: View {
         }
         .sheet(isPresented: $playlistManager.showingCreatePlaylistModal) {
             NamePromptSheet(
-                title: "New Playlist",
-                prompt: "Playlist Name",
+                title: "New crate",
+                prompt: "Crate name",
                 detail: playlistManager.tracksToAddToNewPlaylist.isEmpty
                     ? nil
                     : Text("Will add: \(playlistManager.tracksToAddToNewPlaylist.count) tracks"),
@@ -456,8 +456,8 @@ struct ContentView: View {
 
     private func importPlaylists() {
         let panel = NSOpenPanel()
-        panel.title = String(localized: "Import Playlists")
-        panel.message = String(localized: "Select up to 25 playlist files to import")
+        panel.title = String(localized: "Import crates")
+        panel.message = String(localized: "Select up to 25 M3U playlist files to import")
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = true
@@ -481,7 +481,7 @@ struct ContentView: View {
              
             guard !urls.isEmpty else { return }
              
-            NotificationManager.shared.startActivity(String(localized: "Importing playlists..."))
+            NotificationManager.shared.startActivity(String(localized: "Importing crates..."))
              
             Task {
                 let importResult = await playlistManager.importPlaylists(from: urls)
@@ -507,18 +507,18 @@ struct ContentView: View {
         // Build aggregate notification messages
         if result.withWarnings > 0 {
             let message = String(
-                localized: "Imported \(result.withWarnings) playlists with \(result.totalTracksMissing) missing tracks"
+                localized: "Imported \(result.withWarnings) crates with \(result.totalTracksMissing) missing tracks"
             )
             notifications.append((.warning, message))
         }
         
         if result.successful > 0 {
-            let message = String(localized: "Successfully imported \(result.successful) playlists (\(result.totalTracksImported) tracks)")
+            let message = String(localized: "Successfully imported \(result.successful) crates (\(result.totalTracksImported) tracks)")
             notifications.append((.info, message))
         }
         
         if result.totalFiles > 0 && result.successful == 0 && result.withWarnings == 0 {
-            let message = String(localized: "Failed to import all \(result.totalFiles) playlists")
+            let message = String(localized: "Failed to import all \(result.totalFiles) crates")
             notifications.append((.error, message))
         }
         
@@ -699,7 +699,7 @@ extension View {
 
 // MARK: - Name Prompt Sheet
 
-/// The name-only creation dialog, shared by "New Playlist..." and "New Collection...".
+/// The name-only creation dialog, shared by "New crate..." and "New Collection...".
 struct NamePromptSheet: View {
     let title: LocalizedStringKey
     let prompt: LocalizedStringKey

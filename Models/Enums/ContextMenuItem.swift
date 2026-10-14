@@ -1,13 +1,13 @@
 import SwiftUI
 
 enum ContextMenuItem {
-    case button(title: String, icon: String? = nil, role: ButtonRole? = nil, action: () -> Void)
+    case button(title: String, icon: String? = nil, role: ButtonRole? = nil, isEnabled: Bool = true, action: () -> Void)
     case menu(title: String, icon: String? = nil, items: [ContextMenuItem])
     case divider
 
     var id: String {
         switch self {
-        case .button(let title, _, _, _):
+        case .button(let title, _, _, _, _):
             return "button_\(title)"
         case .menu(let title, _, _):
             return "menu_\(title)"
@@ -19,7 +19,7 @@ enum ContextMenuItem {
     var icon: String? {
         if #available(macOS 26.0, *) {
             switch self {
-            case .button(_, let icon, _, _), .menu(_, let icon, _):
+            case .button(_, let icon, _, _, _), .menu(_, let icon, _):
                 return icon
             case .divider:
                 return nil
@@ -31,7 +31,7 @@ enum ContextMenuItem {
     
     var title: String {
         switch self {
-        case .button(let title, _, _, _), .menu(let title, _, _):
+        case .button(let title, _, _, _, _), .menu(let title, _, _):
             return title
         case .divider:
             return ""

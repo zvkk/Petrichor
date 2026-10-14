@@ -99,7 +99,8 @@ extension PlaylistManager {
     }
 
     /// Update play count for a track
-    func incrementPlayCount(for track: Track) {
+    func incrementPlayCount(for track: Track, purpose: PlaybackPurpose) {
+        guard purpose == .ordinary else { return }
         Task {
             guard let trackId = track.trackId else {
                 Logger.error("Cannot update play count - track has no database ID")

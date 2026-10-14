@@ -1,6 +1,322 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+      "This crate is no longer available.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "This crate is no longer available."
+            }
+          }
+        }
+      },
+      "This crate has no tracks to export.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "This crate has no tracks to export."
+            }
+          }
+        }
+      },
+      "Some tracks have no available local audio.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Some tracks have no available local audio."
+            }
+          }
+        }
+      },
+      "Tracklist": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Tracklist"
+            }
+          }
+        }
+      },
+      "M3U": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "M3U"
+            }
+          }
+        }
+      },
+      "Rekordbox XML": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Rekordbox XML"
+            }
+          }
+        }
+      },
+      "Copy tracklist": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Copy tracklist"
+            }
+          }
+        }
+      },
+      "Save tracklist": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Save tracklist"
+            }
+          }
+        }
+      },
+      "Save tracklist…": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Save tracklist…"
+            }
+          }
+        }
+      },
+      "Export to Rekordbox…": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Export to Rekordbox…"
+            }
+          }
+        }
+      },
+      "Number tracks": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Number tracks"
+            }
+          }
+        }
+      },
+      "Include labels": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Include labels"
+            }
+          }
+        }
+      },
+      "Untitled": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Untitled"
+            }
+          }
+        }
+      },
+      "Connect Dropbox to share crates with iPhone.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Connect Dropbox to share crates with iPhone."
+            }
+          }
+        }
+      },
+      "Play Crate": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Play Crate"
+            }
+          }
+        }
+      },
+      "Add Crate to Queue": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Add Crate to Queue"
+            }
+          }
+        }
+      },
+      "Play Crate Next": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Play Crate Next"
+            }
+          }
+        }
+      },
+      "Plays a crate in Petrichor.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Plays a crate in Petrichor."
+            }
+          }
+        }
+      },
+      "Adds a crate to the end of the queue in Petrichor.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Adds a crate to the end of the queue in Petrichor."
+            }
+          }
+        }
+      },
+      "Queues a crate to play next in Petrichor.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Queues a crate to play next in Petrichor."
+            }
+          }
+        }
+      },
+      "Unavailable shared track (item %lld)": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Unavailable shared track (item %lld)"
+            }
+          }
+        }
+      },
+      "Unavailable tracks in %@": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Unavailable tracks in %@"
+            }
+          }
+        }
+      },
+      "\n\nExport available tracks will export %lld of %lld tracks.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "\n\nExport available tracks will export %lld of %lld tracks."
+            }
+          }
+        }
+      },
+      "Export available tracks (%lld)": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Export available tracks (%lld)"
+            }
+          }
+        }
+      },
+      "Copied tracklist (%lld tracks)": {
+        "localizations": {
+          "en": {
+            "variations": {
+              "plural": {
+                "one": {
+                  "stringUnit": {
+                    "state": "translated",
+                    "value": "Copied tracklist (%lld track)"
+                  }
+                },
+                "other": {
+                  "stringUnit": {
+                    "state": "translated",
+                    "value": "Copied tracklist (%lld tracks)"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Exported %@ (%lld tracks)": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Exported %1$@ (%#@tracks@)"
+            },
+            "substitutions": {
+              "tracks": {
+                "argNum": 2,
+                "formatSpecifier": "lld",
+                "variations": {
+                  "plural": {
+                    "one": {
+                      "stringUnit": {
+                        "state": "translated",
+                        "value": "%arg track"
+                      }
+                    },
+                    "other": {
+                      "stringUnit": {
+                        "state": "translated",
+                        "value": "%arg tracks"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Choose where to save %lld crate files": {
+        "localizations": {
+          "en": {
+            "variations": {
+              "plural": {
+                "one": {
+                  "stringUnit": {
+                    "state": "translated",
+                    "value": "Choose where to save %lld crate file"
+                  }
+                },
+                "other": {
+                  "stringUnit": {
+                    "state": "translated",
+                    "value": "Choose where to save %lld crate files"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
     "%lld tracks unavailable on this device" : {
       "localizations": {
         "en": {
@@ -1082,7 +1398,7 @@
         }
       }
     },
-    "Add some tracks to this playlist to get started" : {
+    "Add some tracks to this crate to get started" : {
       "comment" : "Empty-state message for an empty regular playlist.",
       "localizations" : {
         "zh-Hans" : {
@@ -1156,20 +1472,8 @@
         }
       }
     },
-    "Add to playlist" : {
+    "Add to crate" : {
       "comment" : "Text for a button that adds a track to a playlist.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "添加到播放列表"
-          }
-        }
-      }
-    },
-    "Add to Playlist" : {
-      "comment" : "Context menu item title for adding a track to a playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "zh-Hans" : {
@@ -1911,7 +2215,7 @@
         }
       }
     },
-    "Choose a playlist from the sidebar to view its contents" : {
+    "Choose a crate from the sidebar to view its contents" : {
       "comment" : "A description of the Playlists view.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -1945,7 +2249,7 @@
         }
       }
     },
-    "Choose Playlist Artwork" : {
+    "Choose crate artwork" : {
       "comment" : "Title of a sheet that allows the user to select an artwork for a playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -1957,7 +2261,7 @@
         }
       }
     },
-    "Choose where to save %lld playlist files" : {
+    "Choose where to save %lld M3U playlist files" : {
       "comment" : "Export playlists save panel message.",
       "localizations" : {
         "en" : {
@@ -1966,13 +2270,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Choose where to save %lld playlist file"
+                  "value" : "Choose where to save %lld M3U playlist file"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Choose where to save %lld playlist files"
+                  "value" : "Choose where to save %lld M3U playlist files"
                 }
               }
             }
@@ -2338,7 +2642,7 @@
         }
       }
     },
-    "Create a new collage from playlist items" : {
+    "Create a new collage from crate items" : {
       "comment" : "Tooltip text for reshuffle button on artwork selection screen.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -2362,7 +2666,7 @@
         }
       }
     },
-    "Create New Playlist" : {
+    "New crate" : {
       "comment" : "A button that creates a new playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -2374,7 +2678,7 @@
         }
       }
     },
-    "Create some playlists first" : {
+    "Create some crates first" : {
       "comment" : "A description of the action to take to create playlists.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -2587,7 +2891,7 @@
         }
       }
     },
-    "Delete Playlist" : {
+    "Delete crate" : {
       "comment" : "A confirmation dialog that lets the user delete a playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -2901,8 +3205,8 @@
         }
       }
     },
-    "Drag to reorder. This order is shown when the playlist is sorted by \"Custom\"." : {
-      "comment" : "A hint that shows when the playlist is sorted by \"Custom\" and",
+    "Drag to reorder. This order is shown when the crate is sorted by \"Custom\"." : {
+      "comment" : "A hint that shows when the crate is sorted by \"Custom\" and",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "zh-Hans" : {
@@ -2969,7 +3273,7 @@
         }
       }
     },
-    "Edit Playlist" : {
+    "Edit crate" : {
       "comment" : "A button to edit a playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -2981,7 +3285,7 @@
         }
       }
     },
-    "Edit Smart Playlist" : {
+    "Edit smart crate" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3019,7 +3323,7 @@
         }
       }
     },
-    "Empty Playlist" : {
+    "Empty crate" : {
       "comment" : "Empty-state title for an empty playlist.",
       "localizations" : {
         "zh-Hans" : {
@@ -3030,7 +3334,7 @@
         }
       }
     },
-    "Empty Smart Playlist" : {
+    "Empty smart crate" : {
       "comment" : "Empty-state title for an empty smart playlist.",
       "localizations" : {
         "zh-Hans" : {
@@ -3243,7 +3547,7 @@
         }
       }
     },
-    "Export Playlists" : {
+    "Export crates" : {
       "comment" : "A menu item that exports playlists.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -3255,7 +3559,7 @@
         }
       }
     },
-    "Export Playlists..." : {
+    "Export crates..." : {
       "comment" : "A button that exports playlists.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -3267,7 +3571,7 @@
         }
       }
     },
-    "Exported %lld playlists to %@" : {
+    "Exported %lld crates to %@" : {
       "comment" : "Notification after exporting playlists. The first argument is the playlist count; the second is the destination folder name.",
       "localizations" : {
         "en" : {
@@ -3276,13 +3580,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Exported %lld playlist to %@"
+                  "value" : "Exported %lld crate to %@"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Exported %lld playlists to %@"
+                  "value" : "Exported %lld crates to %@"
                 }
               }
             }
@@ -3302,7 +3606,7 @@
         }
       }
     },
-    "Exporting playlists..." : {
+    "Exporting crates..." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -3359,7 +3663,7 @@
         }
       }
     },
-    "Failed to export all %lld playlists" : {
+    "Failed to export all %lld crates" : {
       "comment" : "Notification when all playlist exports fail.",
       "localizations" : {
         "en" : {
@@ -3368,13 +3672,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Failed to export the playlist"
+                  "value" : "Failed to export the crate"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Failed to export all %lld playlists"
+                  "value" : "Failed to export all %lld crates"
                 }
               }
             }
@@ -3394,7 +3698,7 @@
         }
       }
     },
-    "Failed to import all %lld playlists" : {
+    "Failed to import all %lld crates" : {
       "comment" : "Notification when no playlist files could be imported.",
       "localizations" : {
         "en" : {
@@ -3403,13 +3707,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Failed to import the playlist"
+                  "value" : "Failed to import the crate"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Failed to import all %lld playlists"
+                  "value" : "Failed to import all %lld crates"
                 }
               }
             }
@@ -4223,7 +4527,7 @@
         }
       }
     },
-    "Import Playlists" : {
+    "Import crates" : {
       "comment" : "A system icon that looks like a square with an arrow pointing downwards.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -4235,7 +4539,7 @@
         }
       }
     },
-    "Import Playlists..." : {
+    "Import crates..." : {
       "comment" : "A button that imports playlists from a file.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -4247,13 +4551,13 @@
         }
       }
     },
-    "Imported %lld playlists with %lld missing tracks" : {
+    "Imported %lld crates with %lld missing tracks" : {
       "comment" : "Warning after importing playlists with missing tracks. The first argument is the playlist count; the second is the missing track count.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Imported %1$lld playlists with %2$lld missing tracks"
+            "value" : "Imported %1$lld crates with %2$lld missing tracks"
           }
         },
         "zh-Hans" : {
@@ -4264,7 +4568,7 @@
         }
       }
     },
-    "Importing playlists..." : {
+    "Importing crates..." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -4274,7 +4578,7 @@
         }
       }
     },
-    "In playlist" : {
+    "In crate" : {
       "comment" : "A label displayed when a track is already in a playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -5192,19 +5496,7 @@
     "New Collection..." : {
       "comment" : "Creates a station collection containing the station the menu was opened from."
     },
-    "New Playlist" : {
-      "comment" : "A label displayed above a text field for creating a new playlist.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新建播放列表"
-          }
-        }
-      }
-    },
-    "New Playlist..." : {
+    "New crate..." : {
       "comment" : "Context menu item to create a new playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -5216,7 +5508,7 @@
         }
       }
     },
-    "New Smart Playlist" : {
+    "Smart crate" : {
       "comment" : "A button that creates a new smart playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -5506,7 +5798,7 @@
         }
       }
     },
-    "No playlists to export" : {
+    "No crates to export" : {
       "comment" : "A message displayed when a user has no playlists to export.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -6441,7 +6733,7 @@
         }
       }
     },
-    "Playlist" : {
+    "Crate" : {
       "comment" : "A menu item that creates a new playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -6453,7 +6745,7 @@
         }
       }
     },
-    "PLAYLIST" : {
+    "CRATE" : {
       "comment" : "Playlist type label shown in playlist details.",
       "localizations" : {
         "zh-Hans" : {
@@ -6464,7 +6756,7 @@
         }
       }
     },
-    "Playlist from Selection" : {
+    "Crate from selection" : {
       "comment" : "A menu item that creates a playlist from the selected items in the current window.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -6476,7 +6768,7 @@
         }
       }
     },
-    "Playlist Name" : {
+    "Crate name" : {
       "comment" : "A label for the playlist name field.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -6488,7 +6780,7 @@
         }
       }
     },
-    "Playlist not found" : {
+    "Crate not found" : {
       "comment" : "A title displayed when a playlist cannot be found.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -6500,7 +6792,7 @@
         }
       }
     },
-    "Playlist Options" : {
+    "Crate options" : {
       "comment" : "A contextual menu that appears when the user taps the ellipsis icon in the sidebar.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -6512,7 +6804,7 @@
         }
       }
     },
-    "Playlists" : {
+    "Crates" : {
       "comment" : "A system icon of a list of music notes.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -7223,20 +7515,8 @@
         }
       }
     },
-    "Remove from playlist" : {
+    "Remove from crate" : {
       "comment" : "Tooltip for the \"Remove\" button in the playlist section of the playlist editor.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从播放列表移除"
-          }
-        }
-      }
-    },
-    "Remove from Playlist" : {
-      "comment" : "Context menu item title for removing tracks from a playlist.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "zh-Hans" : {
@@ -7385,7 +7665,7 @@
         }
       }
     },
-    "Removes all folders, tracks, playlists, radio stations, station collections, and pinned items. Use the checkbox in the confirmation dialog to optionally reset app preferences." : {
+    "Removes all folders, tracks, crates, radio stations, station collections, and pinned items. Use the checkbox in the confirmation dialog to optionally reset app preferences." : {
       "comment" : "A description of the reset library data action.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -8032,7 +8312,7 @@
         }
       }
     },
-    "Select a Playlist" : {
+    "Select a crate" : {
       "comment" : "A description of the playlist selection feature.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -8078,7 +8358,7 @@
         }
       }
     },
-    "Select playlists to export:" : {
+    "Select crates to export:" : {
       "comment" : "A label displayed above a list of playlists that can be selected to be exported.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -8090,7 +8370,7 @@
         }
       }
     },
-    "Select up to 25 playlist files to import" : {
+    "Select up to 25 M3U playlist files to import" : {
       "comment" : "Open panel message for importing playlists.",
       "localizations" : {
         "zh-Hans" : {
@@ -8346,7 +8626,7 @@
         }
       }
     },
-    "Shows only the highest quality version in the library; explicit playlist entries remain visible" : {
+    "Shows only the highest quality version in the library; explicit crate entries remain visible" : {
       "comment" : "A toggle that lets the user choose whether to hide duplicate songs.",
       "isCommentAutoGenerated" : true
     },
@@ -8457,7 +8737,7 @@
         }
       }
     },
-    "SMART PLAYLIST" : {
+    "SMART CRATE" : {
       "comment" : "Smart playlist type label shown in playlist details.",
       "localizations" : {
         "zh-Hans" : {
@@ -8724,13 +9004,13 @@
         }
       }
     },
-    "Successfully imported %lld playlists (%lld tracks)" : {
+    "Successfully imported %lld crates (%lld tracks)" : {
       "comment" : "Notification after importing playlists. The first argument is the playlist count; the second is the imported track count.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Successfully imported %1$lld playlists (%2$lld tracks)"
+            "value" : "Successfully imported %1$lld crates (%2$lld tracks)"
           }
         },
         "zh-Hans" : {
@@ -8889,7 +9169,7 @@
         }
       }
     },
-    "This smart playlist will update automatically based on its criteria" : {
+    "This smart crate will update automatically based on its criteria" : {
       "comment" : "Empty-state message for a generic smart playlist.",
       "localizations" : {
         "zh-Hans" : {
@@ -8932,7 +9212,7 @@
         }
       }
     },
-    "This will permanently remove all data, including added folders, tracks, playlists, radio stations, station collections, and pinned items. This action cannot be undone." : {
+    "This will permanently remove all data, including added folders, tracks, crates, radio stations, station collections, and pinned items. This action cannot be undone." : {
       "comment" : "Alert message when the user is prompted to reset their library data.",
       "isCommentAutoGenerated" : true,
       "localizations" : {

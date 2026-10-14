@@ -6,6 +6,10 @@ struct ExportPlaylistsSheet: View {
     
     @State private var selectedPlaylistIds: Set<UUID> = []
     @State private var selectAll: Bool = false
+    @State private var format: CrateExportFormat = .m3u
+    @State private var numbered = true
+    @State private var includeLabel = false
+    @State private var preparing = false
     
     private var exportablePlaylists: [Playlist] {
         // M3U carries file paths, which station collections have none of.
@@ -21,6 +25,15 @@ struct ExportPlaylistsSheet: View {
             sheetHeader
             Divider()
             playlistList
+            Picker("Format", selection: $format) {
+                ForEach(CrateExportFormat.allCases, id: \.self) { Text($0.displayName).tag($0) }
+            }.padding(.horizontal)
+            if format == .tracklist {
+                HStack {
+                    Toggle("Number tracks", isOn: $numbered)
+                    Toggle("Include labels", isOn: $includeLabel)
+                }.toggleStyle(.checkbox).padding(.horizontal)
+            }
             Divider()
             sheetFooter
         }
@@ -45,7 +58,7 @@ struct ExportPlaylistsSheet: View {
             .keyboardShortcut(.escape)
             .focusable(false)
             
-            Text("Export Playlists")
+            Text("Export crates")
                 .font(.headline)
             
             Spacer()
@@ -57,7 +70,7 @@ struct ExportPlaylistsSheet: View {
     
     private var playlistList: some View {
         VStack(spacing: 0) {
-            Text("Select playlists to export:")
+            Text("Select crates to export:")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -99,11 +112,11 @@ struct ExportPlaylistsSheet: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
             
-            Text("No playlists to export")
+            Text("No crates to export")
                 .font(.headline)
                 .foregroundColor(.secondary)
             
-            Text("Create some playlists first")
+            Text("Create some crates first")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -179,7 +192,7 @@ struct ExportPlaylistsSheet: View {
                 Text("Export (\(selectedCount))")
             }
             .keyboardShortcut(.defaultAction)
-            .disabled(selectedCount == 0)
+            .disabled(selectedCount == 0 || preparing)
         }
         .padding()
     }
@@ -215,29 +228,50 @@ struct ExportPlaylistsSheet: View {
         
         let playlistsToExport = exportablePlaylists.filter { selectedPlaylistIds.contains($0.id) }
         
-        let panel = NSOpenPanel()
-        panel.title = String(localized: "Export Playlists")
-        panel.message = String(localized: "Choose where to save \(playlistsToExport.count) playlist files")
-        panel.prompt = String(localized: "Export")
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.canCreateDirectories = true
-        panel.allowsMultipleSelection = false
-        
-        panel.begin { response in
-            guard response == .OK, let directoryURL = panel.url else { return }
-            
-            isPresented = false
-            NotificationManager.shared.startActivity(String(localized: "Exporting playlists..."))
-            
-            Task {
-                let result = await playlistManager.exportPlaylists(playlistsToExport, to: directoryURL)
-                
-                await MainActor.run {
-                    NotificationManager.shared.stopActivity()
-                    showExportNotifications(result: result, directory: directoryURL)
-                }
+        preparing = true
+        let selectedFormat = format
+        let selectedNumbering = numbered
+        let selectedLabels = includeLabel
+        Task { @MainActor in
+            defer { preparing = false }
+            var snapshots: [CrateExportSnapshot] = []
+            var results: [PlaylistExportResult] = []
+            for playlist in playlistsToExport {
+                do {
+                    guard let snapshot = try await playlistManager.prepareExportSnapshot(playlistID: playlist.id, format: selectedFormat) else { return }
+                    snapshots.append(snapshot)
+                } catch { results.append(PlaylistExportResult(playlistName: playlist.name, error: error)) }
             }
+            guard !snapshots.isEmpty else {
+                showExportNotifications(result: BulkExportResult(results: results), directory: URL(fileURLWithPath: ""))
+                return
+            }
+            let panel = NSOpenPanel()
+            panel.title = String(localized: "Export crates")
+            panel.message = String(localized: "Choose where to save \(snapshots.count) crate files")
+            panel.prompt = String(localized: "Export")
+            panel.canChooseFiles = false
+            panel.canChooseDirectories = true
+            panel.canCreateDirectories = true
+            panel.allowsMultipleSelection = false
+            guard await panel.begin() == .OK, let directoryURL = panel.url else { return }
+            var usedNames: Set<String> = []
+            for snapshot in snapshots {
+                let base = FilesystemUtils.sanitizeFilename(snapshot.name)
+                var filename = base + "." + selectedFormat.fileExtension
+                var suffix = 2
+                while !usedNames.insert(filename.lowercased()).inserted {
+                    filename = base + " (\(suffix))." + selectedFormat.fileExtension
+                    suffix += 1
+                }
+                do {
+                    try playlistManager.writeExportSnapshot(snapshot, format: selectedFormat,
+                        to: directoryURL.appendingPathComponent(filename), numbered: selectedNumbering, includeLabel: selectedLabels)
+                    results.append(PlaylistExportResult(playlistName: snapshot.name, error: nil))
+                } catch { results.append(PlaylistExportResult(playlistName: snapshot.name, error: error)) }
+            }
+            isPresented = false
+            showExportNotifications(result: BulkExportResult(results: results), directory: directoryURL)
         }
     }
     
@@ -249,12 +283,12 @@ struct ExportPlaylistsSheet: View {
         }
         
         if result.successful > 0 {
-            let message = String(localized: "Exported \(result.successful) playlists to \(directory.lastPathComponent)")
+            let message = String(localized: "Exported \(result.successful) crates to \(directory.lastPathComponent)")
             notifications.append((.info, message))
         }
         
         if result.totalPlaylists > 0 && result.successful == 0 {
-            let message = String(localized: "Failed to export all \(result.totalPlaylists) playlists")
+            let message = String(localized: "Failed to export all \(result.totalPlaylists) crates")
             notifications.append((.error, message))
         }
         

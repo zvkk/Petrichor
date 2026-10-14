@@ -5,6 +5,10 @@ struct GeneralTabView: View {
     @EnvironmentObject var libraryManager: LibraryManager
     @EnvironmentObject var playbackManager: PlaybackManager
 
+    @AppStorage(PreviewSettings.Keys.fraction) private var previewFraction = PreviewSettings.defaults.fraction
+    @AppStorage(PreviewSettings.Keys.minSeconds) private var previewMinSeconds = PreviewSettings.defaults.minSeconds
+    @AppStorage(PreviewSettings.Keys.maxSeconds) private var previewMaxSeconds = PreviewSettings.defaults.maxSeconds
+
     @State private var crossfadeEnabled = false
     @State private var crossfadeDuration: TimeInterval = 3.0
     @State private var replayGainEnabled = false
@@ -32,6 +36,22 @@ struct GeneralTabView: View {
     @AppStorage("automaticUpdatesEnabled")
     private var automaticUpdatesEnabled = true
 
+    private var previewSettings: PreviewSettings {
+        PreviewSettings(fraction: previewFraction, minSeconds: previewMinSeconds, maxSeconds: previewMaxSeconds)
+    }
+
+    private var validPreviewSettings: PreviewSettings { previewSettings.validOrDefault }
+
+    private func updatePreviewSettings(fraction: Double? = nil, min: Double? = nil, max: Double? = nil) {
+        let old = validPreviewSettings
+        let next = PreviewSettings(fraction: fraction ?? old.fraction,
+            minSeconds: min ?? old.minSeconds, maxSeconds: max ?? old.maxSeconds)
+        guard next.isValid else { return }
+        previewFraction = next.fraction
+        previewMinSeconds = next.minSeconds
+        previewMaxSeconds = next.maxSeconds
+    }
+
     var body: some View {
         Form {
             Section("Behavior") {
@@ -40,7 +60,7 @@ struct GeneralTabView: View {
                 Toggle("Keep running in menubar on close", isOn: $closeToMenubar)
                     .help("Keeps the app running in the menubar even after closing")
                 Toggle("Hide duplicate songs", isOn: $hideDuplicateTracks)
-                    .help("Shows only the highest quality version in the library; explicit playlist entries remain visible")
+                    .help("Shows only the highest quality version in the library; explicit crate entries remain visible")
                     .onChange(of: hideDuplicateTracks) {
                         // Filter is applied at query time; invalidate the load-once caches
                         // and reload affected state so it takes effect without a relaunch.
@@ -65,6 +85,14 @@ struct GeneralTabView: View {
             }
 
             Section("Playback") {
+                Stepper("Preview start: \(String(format: "%.0f", validPreviewSettings.fraction * 100))%",
+                        value: Binding(get: { validPreviewSettings.fraction }, set: { updatePreviewSettings(fraction: $0) }), in: 0...1, step: 0.05)
+                Stepper("Preview minimum: \(String(format: "%.0f", validPreviewSettings.minSeconds)) seconds",
+                        value: Binding(get: { validPreviewSettings.minSeconds }, set: { updatePreviewSettings(min: $0) }), in: 0...validPreviewSettings.maxSeconds, step: 5)
+                Stepper("Preview maximum: \(String(format: "%.0f", validPreviewSettings.maxSeconds)) seconds",
+                        value: Binding(get: { validPreviewSettings.maxSeconds }, set: { updatePreviewSettings(max: $0) }),
+                        in: validPreviewSettings.minSeconds...max(600, validPreviewSettings.maxSeconds), step: 5)
+
                 Toggle("Crossfade tracks", isOn: $crossfadeEnabled)
                     .help("Fades one track out as the next fades in")
                     .onChange(of: crossfadeEnabled) { _, newValue in
@@ -91,9 +119,15 @@ struct GeneralTabView: View {
             }
         }
         .formStyle(.grouped)
-        .scrollDisabled(true)
+        .scrollDisabled(false)
         .padding(5)
         .onAppear {
+            if !previewSettings.isValid {
+                let fallback = PreviewSettings.defaults
+                previewFraction = fallback.fraction
+                previewMinSeconds = fallback.minSeconds
+                previewMaxSeconds = fallback.maxSeconds
+            }
             crossfadeEnabled = playbackManager.isCrossfadeEnabled()
 
             let storedDuration = playbackManager.getCrossfadeDuration()

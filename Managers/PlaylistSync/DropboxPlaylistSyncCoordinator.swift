@@ -5,7 +5,7 @@ import GRDB
 @MainActor
 final class DropboxPlaylistSyncCoordinator: ObservableObject {
     static let shared = DropboxPlaylistSyncCoordinator()
-    @Published var status = String(localized: "Connect Dropbox to share playlists with iPhone.")
+    @Published var status = String(localized: "Connect Dropbox to share crates with iPhone.")
     @Published var isWorking = false
     @Published var states: [SyncPlaylistState] = []
     @Published var isPaired = false

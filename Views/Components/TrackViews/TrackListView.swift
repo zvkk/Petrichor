@@ -69,6 +69,7 @@ struct TrackListView: View {
         .focusable()
         .focused($isFocused)
         .focusEffectDisabled()
+        .focusedValue(\.previewSelection, previewTracks)
         .onMoveCommand { direction in
             switch direction {
             case .up:
@@ -79,8 +80,9 @@ struct TrackListView: View {
                 break
             }
         }
-        .onKeyPress(.return) {
-            guard let track = selectedTrack else { return .ignored }
+        .onKeyPress(keys: [.return], phases: .down) { press in
+            guard press.modifiers.isEmpty, !PreviewCommandPolicy.hasEditableFocus,
+                  let track = selectedTrack else { return .ignored }
             if isCurrentTrack(track) {
                 DispatchQueue.main.async {
                     playbackManager.togglePlayPause()
@@ -171,6 +173,10 @@ struct TrackListView: View {
         guard identity != selectedTrackID else { return }
         selectedTrackID = identity
         onKeyboardSelection(identity)
+    }
+
+    private var previewTracks: [Track] {
+        selectedTrack.map { [$0] } ?? []
     }
 
     private var selectedTrack: Track? {

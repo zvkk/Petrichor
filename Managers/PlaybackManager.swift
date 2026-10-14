@@ -111,6 +111,12 @@ class PlaybackManager: NSObject, ObservableObject {
     /// instead of a fixed delay ensures the asset is open before the resume lands,
     /// avoiding the stuck-paused race on the async Crescendo backend. Carries the
     /// entry identity so a normal user-pause never trips the restore.
+    @Published var isPreviewing = false {
+        didSet { remoteCommandManager.setQueueNavigationEnabled(!isPreviewing) }
+    }
+    @MainActor lazy var previewSession = PreviewSession(manager: self)
+    var pendingPreviewRestore: (entryId: AudioEntryId, position: Double, generation: UInt64)?
+
     var pendingRestoreResume: (entryId: AudioEntryId, position: Double)?
 
     /// Play pressed before the restored track finished loading; honored by
@@ -120,7 +126,51 @@ class PlaybackManager: NSObject, ObservableObject {
     // MARK: - Engine queue mirror
 
     /// Identity of the track currently loaded in the engine.
-    var currentEntryId: AudioEntryId?
+    var currentEntryId: AudioEntryId? {
+        didSet {
+            if let currentEntryId { pendingTerminalEntries.insert(currentEntryId) }
+        }
+    }
+    // Submitted entries survive replacement only until their terminal callback.
+    var entryPurposes: [AudioEntryId: PlaybackPurpose] = [:]
+    var entryTracks: [AudioEntryId: Track] = [:]
+    var pendingTerminalEntries: Set<AudioEntryId> = []
+    private var classifiedEntries: Set<AudioEntryId> = []
+
+    /// Keep live ownership plus entries that could have played, never old unstarted rows.
+    func retireUnownedEntries() {
+        if let id = audioPlayer.currentEntryId, entryPurposes[id] != nil, !classifiedEntries.contains(id) {
+            pendingTerminalEntries.insert(id)
+        }
+        let owned = Set(mirror.map(\.entryId)).union([currentEntryId].compactMap { $0 }).union(entryPurposes.keys.filter {
+            unmirroredTracks[$0.id] != nil
+        }).union(pendingTerminalEntries)
+        entryPurposes = entryPurposes.filter { owned.contains($0.key) }
+        entryTracks = entryTracks.filter { owned.contains($0.key) }
+        classifiedEntries.formIntersection(owned)
+    }
+
+    func completeEntry(_ id: AudioEntryId) {
+        pendingTerminalEntries.remove(id)
+        classifiedEntries.insert(id)
+        if currentEntryId != id && queuePosition(ofEntry: id) == nil && unmirroredTracks[id.id] == nil {
+            entryPurposes.removeValue(forKey: id)
+            entryTracks.removeValue(forKey: id)
+            classifiedEntries.remove(id)
+        }
+    }
+
+    func registerEntry(_ entryId: AudioEntryId, track: Track, purpose: PlaybackPurpose) {
+        entryPurposes[entryId] = purpose
+        var callbackTrack = track
+        callbackTrack.setArtworkData(nil)
+        entryTracks[entryId] = callbackTrack
+    }
+
+    func purpose(for entryId: AudioEntryId) -> PlaybackPurpose? { entryPurposes[entryId] }
+    var canPersistOrdinarySession: Bool { !isPreviewing && currentPlaybackPurpose != .preview }
+    var currentPlaybackPurpose: PlaybackPurpose? { currentEntryId.flatMap { purpose(for: $0) } }
+
     /// One element per `playlistManager.currentQueue` position, same order. Engine
     /// indices are looked up through these, never assumed equal, so an injected
     /// successor can't shift them. Empty while playing something outside the queue.
@@ -156,11 +206,11 @@ class PlaybackManager: NSObject, ObservableObject {
 
     // MARK: - Initialization
 
-    init(libraryManager: LibraryManager, playlistManager: PlaylistManager) {
+    init(libraryManager: LibraryManager, playlistManager: PlaylistManager, engine: PlaybackEngine? = nil) {
         self.libraryManager = libraryManager
         self.playlistManager = playlistManager
         self.remoteCommandManager = RemoteCommandManager()
-        self.audioPlayer = PlaybackEngine()
+        self.audioPlayer = engine ?? PlaybackEngine()
         
         super.init()
         
@@ -173,7 +223,8 @@ class PlaybackManager: NSObject, ObservableObject {
     }
 
     deinit {
-        stop()
+        audioPlayer.delegate = nil
+        audioPlayer.stop()
         stopProgressUpdateTimer()
     }
     
@@ -273,8 +324,19 @@ class PlaybackManager: NSObject, ObservableObject {
             return
         }
 
+        if isPreviewing {
+            MainActor.assumeIsolated { previewSession.togglePlayPause() }
+            return
+        }
         if currentStation != nil {
             toggleStationPlayback()
+            return
+        }
+
+        if pendingPreviewRestore != nil {
+            // End Preview reloads paused. Keep Play/Pause intent until its entry is ready.
+            pendingPlayOnRestore.toggle()
+            isPlaying = pendingPlayOnRestore
             return
         }
 
@@ -319,6 +381,7 @@ class PlaybackManager: NSObject, ObservableObject {
 
     /// The shared teardown behind both stop flavors.
     private func haltPlayback() {
+        cancelPreviewForOrdinaryPlayback()
         // Clearing the source counts as changing it: a restore fetch still in flight must
         // not reinstall its track over a queue the user has just emptied.
         beginSourceGeneration()
@@ -330,6 +393,7 @@ class PlaybackManager: NSObject, ObservableObject {
         mirror = []
         unmirroredTracks = [:]
         injectedNext = nil
+        retireUnownedEntries()
         currentTime = 0
         isPlaying = false
         pendingPlayOnRestore = false
@@ -338,6 +402,7 @@ class PlaybackManager: NSObject, ObservableObject {
     func seekTo(time: Double) {
         // A live stream has no position to seek to (its duration is infinite).
         guard currentStation == nil else { return }
+        guard !isPreviewing || audioPlayer.currentEntryId == currentEntryId else { return }
 
         // Clamp seek position to the engine's actual duration to prevent seek
         // errors when the DB-stored duration differs from the actual track
@@ -756,7 +821,7 @@ private extension PlaybackManager {
     /// rebuilds the engine session and re-syncs audio + progress bar.
     func watchProgressForFreeze(_ sampled: Double) {
         switch progressFreezeWatchdog.check(
-            sampled: sampled, isPlaying: isPlaying, trackURL: currentTrack?.url
+            sampled: sampled, isPlaying: isPlaying && !isPreviewing, trackURL: currentTrack?.url
         ) {
         case .none:
             return
@@ -776,6 +841,19 @@ private extension PlaybackManager {
 
 extension PlaybackManager: AudioPlayerDelegate {
     func audioPlayerDidStartPlaying(player: PlaybackEngine, with entryId: AudioEntryId) {
+        // Production backend starts arrive on main. Retain the identity before the
+        // deferred UI work: another queue can replace this one in the same turn.
+        let retainStartedEntry = {
+            if self.entryPurposes[entryId] != nil {
+                self.pendingTerminalEntries.insert(entryId)
+                self.classifiedEntries.remove(entryId)
+            }
+        }
+        if Thread.isMainThread {
+            retainStartedEntry()
+        } else {
+            DispatchQueue.main.sync(execute: retainStartedEntry)
+        }
         DispatchQueue.main.async {
             if self.currentStation == nil, self.stationEntryIds.contains(entryId) {
                 Logger.info("Ignored a start from a superseded stream: \(entryId.id)")
@@ -801,6 +879,12 @@ extension PlaybackManager: AudioPlayerDelegate {
                 return
             }
 
+            guard player.currentEntryId == entryId else { return }
+            if self.purpose(for: entryId) == .preview {
+                guard self.currentEntryId == entryId, self.isPreviewing else { return }
+                self.isPlaying = true
+                return
+            }
             if let injected = self.injectedNext, injected.entryId == entryId {
                 // A repeat lookahead started; fold it into the mirror, then treat it
                 // like any other engine-driven advance.
@@ -815,7 +899,6 @@ extension PlaybackManager: AudioPlayerDelegate {
                 // id so a superseded load can't publish the wrong track.
                 self.publishNowPlayingMetadata(for: started)
             } else {
-                self.isPlaying = true
                 Logger.warning("Started an entry the mirror cannot name: \(entryId.id)")
             }
             self.currentTime = self.audioPlayer.currentPlaybackProgress
@@ -830,6 +913,7 @@ extension PlaybackManager: AudioPlayerDelegate {
         previous: AudioPlayerState
     ) {
         DispatchQueue.main.async {
+            guard entryId != nil || (self.currentEntryId == nil && self.currentStationEntryId == nil) else { return }
             if let entryId, self.stationEntryIds.contains(entryId) {
                 if newState == .stopped {
                     // A finish/error callback may already be queued behind this state
@@ -869,7 +953,9 @@ extension PlaybackManager: AudioPlayerDelegate {
             case .paused:
                 self.stopProgressUpdateTimer()
                 self.isPlaying = false
-                self.releasePlaybackForIdleIfHidden()
+                if !self.isPreviewing && self.pendingPreviewRestore == nil {
+                    self.releasePlaybackForIdleIfHidden()
+                }
             case .stopped:
                 self.stopProgressUpdateTimer()
                 self.isPlaying = false
@@ -880,6 +966,14 @@ extension PlaybackManager: AudioPlayerDelegate {
                 self.isPlaying = true
             case .ready:
                 self.stopProgressUpdateTimer()
+            }
+
+            if newState == .paused, let id = entryId {
+                if self.purpose(for: id) == .preview {
+                    self.previewSession.ready(entryID: id)
+                } else {
+                    self.finishPreviewRestoration(entryID: id)
+                }
             }
 
             // Finish a deferred restore-resume: the startPaused load has now
@@ -926,7 +1020,16 @@ extension PlaybackManager: AudioPlayerDelegate {
         DispatchQueue.main.async {
             if self.handleStationFinish(entryId: entryId, stopReason: stopReason) { return }
 
-            defer { self.errorReportedEntryIds.remove(entryId) }
+            defer {
+                self.errorReportedEntryIds.remove(entryId)
+                self.completeEntry(entryId)
+            }
+            if self.purpose(for: entryId) == .preview {
+                guard entryId == self.currentEntryId, self.isPreviewing else { return }
+                self.audioPlayer.pause()
+                self.isPlaying = false
+                return
+            }
 
             // Credit the track that actually finished, resolved by entry id: on a
             // gapless advance currentTrack may already be the next track.
@@ -935,16 +1038,11 @@ extension PlaybackManager: AudioPlayerDelegate {
             let finishedTrack = self.track(forEntry: entryId)
             self.unmirroredTracks.removeValue(forKey: entryId.id)
 
-            guard self.currentTrack != nil else {
-                Logger.info("Ignoring finish - no current track")
-                return
-            }
-
             Logger.info("Track finished (reason: \(stopReason))")
 
-            if stopReason == .eof, let finishedTrack {
-                self.playlistManager.incrementPlayCount(for: finishedTrack)
-                self.scrobbleManager?.trackFinished(finishedTrack)
+            if stopReason == .eof, self.purpose(for: entryId) == .ordinary, let finishedTrack {
+                self.playlistManager.incrementPlayCount(for: finishedTrack, purpose: .ordinary)
+                self.scrobbleManager?.trackFinished(finishedTrack, purpose: .ordinary)
 
                 Logger.info("Track completed naturally, updating play count, last played date, and scrobbling it if configured")
             }
@@ -953,6 +1051,7 @@ extension PlaybackManager: AudioPlayerDelegate {
             // current; a stale finish that raced ahead of a gapless advance must not
             // flip isPlaying false under the now-playing track (which freezes its bar).
             let finishedEntryIsCurrent = entryId == self.currentEntryId
+            guard finishedEntryIsCurrent else { return }
 
             switch stopReason {
             case .eof:
@@ -986,6 +1085,8 @@ extension PlaybackManager: AudioPlayerDelegate {
             // so the boundary stays gapless. Drop it from the app queue too: leaving
             // the row would make the two queues differ in membership, which every
             // later edit and the shuffle read-back both assume cannot happen.
+            guard self.purpose(for: entryId) != .preview,
+                  self.audioPlayer.queue.contains(entryId) || self.queuePosition(ofEntry: entryId) != nil else { return }
             self.dropSkippedEntry(entryId)
             Logger.warning("Engine skipped an undecodable queue entry: \(entryId.id)")
             self.primeRepeatLookahead()

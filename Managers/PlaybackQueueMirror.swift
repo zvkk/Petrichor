@@ -30,9 +30,14 @@ extension PlaybackManager {
 
     /// Rebuilds the mirror with a fresh entry per track.
     func rebuildQueueMirror(for tracks: [Track]) {
-        mirror = tracks.map { MirroredEntry(entryId: .fresh(), track: $0) }
+        mirror = tracks.map {
+            let entryId = AudioEntryId.fresh()
+            registerEntry(entryId, track: $0, purpose: .ordinary)
+            return MirroredEntry(entryId: entryId, track: $0)
+        }
         unmirroredTracks = [:]
         injectedNext = nil
+        retireUnownedEntries()
     }
 
     func mirrorEntries() -> [QueueEntry] {
@@ -41,7 +46,7 @@ extension PlaybackManager {
 
     /// The track an entry plays, whether it is a queue member or a lookahead.
     func track(forEntry entryId: AudioEntryId) -> Track? {
-        mirror.first { $0.entryId == entryId }?.track ?? unmirroredTracks[entryId.id]
+        mirror.first { $0.entryId == entryId }?.track ?? unmirroredTracks[entryId.id] ?? entryTracks[entryId]
     }
 
     /// The `currentQueue` position an entry maps to, or nil if it isn't mirrored.
@@ -72,6 +77,7 @@ extension PlaybackManager {
     /// order: repeat-one always, repeat-all at the last entry. In every other case
     /// the queue order is already right and the engine primes it unaided.
     func primeRepeatLookahead() {
+        guard !isPreviewing else { return }
         guard !mirror.isEmpty, let next = playlistManager.peekNextTrack() else {
             clearInjectedNext()
             return
@@ -89,6 +95,7 @@ extension PlaybackManager {
 
         clearInjectedNext()
         let entryId = AudioEntryId.fresh()
+        registerEntry(entryId, track: next.track, purpose: .ordinary)
         injectedNext = InjectedNext(entryId: entryId, track: next.track, standsInFor: next.index)
         unmirroredTracks[entryId.id] = next.track
         audioPlayer.insertNext(QueueEntry(entryId: entryId, url: next.track.url))
@@ -100,12 +107,14 @@ extension PlaybackManager {
         audioPlayer.removeQueueEntry(id: injected.entryId)
         unmirroredTracks.removeValue(forKey: injected.entryId.id)
         injectedNext = nil
+        retireUnownedEntries()
     }
 
     /// Folds a just-started injected entry into the mirror: it replaces the entry
     /// mirrored at `standsInFor` and moves into that slot. Both engine calls happen
     /// after the audio transition, so the boundary stays gapless.
     func absorbInjectedEntry(_ injected: InjectedNext) {
+        defer { retireUnownedEntries() }
         injectedNext = nil
         unmirroredTracks.removeValue(forKey: injected.entryId.id)
 
@@ -146,7 +155,7 @@ extension PlaybackManager {
             playlistManager.advanceQueueIndex(to: position)
         }
 
-        scrobbleManager?.trackStarted(track)
+        scrobbleManager?.trackStarted(track, purpose: purpose(for: entryId) ?? .preview)
         publishNowPlayingMetadata(for: track)
         loadFullTrack(for: track)
         hydrateArtworkWindow()
@@ -176,7 +185,7 @@ extension PlaybackManager {
         currentFullTrack = nil
         currentEntryId = entryId
         currentTime = position
-        scrobbleManager?.trackStarted(track)
+        scrobbleManager?.trackStarted(track, purpose: purpose(for: entryId) ?? .preview)
         loadFullTrack(for: track)
         hydrateArtworkWindow()
     }
@@ -245,6 +254,7 @@ extension PlaybackManager {
     /// field is also set by every seek, so picking it up here would resume a freshly
     /// chosen track at the position of the one before it.
     func startQueue(at index: Int, resumeAt: Double = 0) {
+        cancelPreviewForOrdinaryPlayback()
         let tracks = playlistManager.currentQueue
         guard tracks.indices.contains(index) else { return }
 
@@ -302,7 +312,9 @@ extension PlaybackManager {
     /// Installs a one-entry queue for a track that isn't in `currentQueue` (a restored
     /// track before any queue exists).
     func startOffQueueTrack(_ track: Track, url: URL, resumeAt: Double) {
+        cancelPreviewForOrdinaryPlayback()
         let entryId = AudioEntryId.fresh()
+        registerEntry(entryId, track: track, purpose: .ordinary)
         mirror = []
         unmirroredTracks = [entryId.id: track]
         injectedNext = nil
@@ -336,10 +348,12 @@ extension PlaybackManager {
             audioPlayer.stop()
         }
         audioPlayer.setQueue(entries, startingAt: index, startPaused: resumeAt > 0)
+        retireUnownedEntries()
     }
 
     /// Jumps to a queue position, leaving the rest of the queue in place.
     func jumpToQueueEntry(at index: Int) {
+        guard !isPreviewing else { return }
         guard let engineIndex = engineIndex(ofQueuePosition: index) else {
             // Not mirrored (or the engine dropped it) - rebuild from the queue.
             startQueue(at: index)
@@ -354,8 +368,10 @@ extension PlaybackManager {
     }
 
     func queueDidInsert(_ track: Track, at index: Int) {
+        guard !isPreviewing else { return }
         guard !mirror.isEmpty else { return }
         let entryId = AudioEntryId.fresh()
+        registerEntry(entryId, track: track, purpose: .ordinary)
         let clamped = min(max(index, 0), mirror.count)
         mirror.insert(MirroredEntry(entryId: entryId, track: track), at: clamped)
 
@@ -376,10 +392,12 @@ extension PlaybackManager {
     }
 
     func queueDidRemove(at index: Int) {
+        guard !isPreviewing else { return }
         guard mirror.indices.contains(index) else { return }
         // Removing the engine's current entry would make it advance or stop; the
         // callers guard against it, so refuse rather than disturb playback.
         guard mirror[index].entryId != currentEntryId else { return }
+        defer { retireUnownedEntries() }
         let entryId = mirror.remove(at: index).entryId
         audioPlayer.removeQueueEntry(id: entryId)
         hydrateArtworkWindow()
@@ -387,6 +405,7 @@ extension PlaybackManager {
     }
 
     func queueDidMove(from source: Int, to destination: Int) {
+        guard !isPreviewing else { return }
         guard mirror.indices.contains(source), mirror.indices.contains(destination) else { return }
         let entry = mirror[source]
         // Read both engine indices before mutating: afterwards the destination slot
@@ -409,6 +428,7 @@ extension PlaybackManager {
     /// index-based removal path lets either side refuse and leaves the two queues
     /// differing in membership, which every later edit assumes cannot happen.
     func dropSkippedEntry(_ entryId: AudioEntryId) {
+        defer { completeEntry(entryId); retireUnownedEntries() }
         unmirroredTracks.removeValue(forKey: entryId.id)
         if injectedNext?.entryId == entryId {
             injectedNext = nil
@@ -419,10 +439,12 @@ extension PlaybackManager {
     }
 
     func queueDidClear() {
+        guard !isPreviewing else { return }
         mirror = []
         unmirroredTracks = [:]
         injectedNext = nil
         audioPlayer.clearQueue()
+        retireUnownedEntries()
     }
 
     /// Shuffles the upcoming entries engine-side and mirrors the resulting order back
@@ -430,6 +452,7 @@ extension PlaybackManager {
     /// restart the playing track. Returns nil when there is no usable mirror, leaving
     /// the caller to shuffle app-side rather than silently doing nothing.
     func shuffleUpcomingQueueEntries() -> [Track]? {
+        guard !isPreviewing else { return nil }
         guard !mirror.isEmpty else { return nil }
 
         clearInjectedNext()

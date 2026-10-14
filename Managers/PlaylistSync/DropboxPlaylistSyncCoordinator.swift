@@ -177,6 +177,8 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                         if let published = try db.publicationFileID(trackID: id) { resolved[id] = published; continue }
                         resolved[id] = try await mapLocal(id, snapshotPath: member.localPath, root: root, pairing: activePairing, client: client, db: db)
                     }
+                    let references = intent.members.compactMap { $0.fileId ?? $0.localTrackID.flatMap { resolved[$0] } }
+                    try await Self.verifyPublicationReferences(references, root: root, pairing: activePairing, client: client, db: db)
                     let validations = try await db.validatePublicationIntent(state.localID, generation: intent.generation, resolved: resolved)
                     _ = try db.materializeSyncIntent(state.localID, generation: intent.generation, resolved: resolved, publicationValidations: validations)
                 } catch PlaylistSyncError.authentication { throw PlaylistSyncError.authentication }
@@ -224,6 +226,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                 let revision = try PlaylistRevision.decode(body, library: pairing.descriptor.libraryId)
                 if failedPlaylists.contains(revision.playlistId) { continue }
                 do {
+                    try await Self.verifyPublicationReferences(revision.tracks.map(\.fileId), root: root, pairing: activePairing, client: client, db: db)
                     let base = DropboxPlaylistTransport.childPath(liveRootPath, ".crate-sync/v1/playlists")
                     try await client.ensureFolder(base)
                     try await client.ensureFolder(base + "/" + revision.playlistId)
@@ -257,6 +260,19 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         try db.saveSyncMapping(fileID: fileID, trackID: id, hash: hash, expectedPath: path)
         return fileID
     }
+    /// Revalidate publication-owned references before creating or sending immutable revisions.
+    /// Keep blocked outbox bodies intact so recovery preserves their IDs and parent chains.
+    nonisolated static func verifyPublicationReferences(_ fileIDs: [String], root: URL, pairing: SyncPairing,
+                                                        client: DropboxPlaylistTransport, db: DatabaseManager,
+                                                        scope: any PublicationScopeAccess = SecurityScopedPublicationAccess()) async throws {
+        for fileID in Set(fileIDs) {
+            guard try !db.publicationRecords(fileID: fileID).isEmpty else { continue }
+            guard try await refreshRemoteMapping(fileID, root: root, pairing: pairing, client: client, db: db, scope: scope) else {
+                throw PlaylistSyncError.mappingBlocked
+            }
+        }
+    }
+
     /// The mapping owner has already scoped definitive failures; the coordinator must not invalidate them again.
     nonisolated static func refreshRemoteMapping(_ fileID: String, root: URL, pairing: SyncPairing,
                                                 client: DropboxPlaylistTransport, db: DatabaseManager,

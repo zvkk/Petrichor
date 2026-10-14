@@ -292,3 +292,50 @@ extension PublicationMappingTests {
         XCTAssertEqual(try nativeIDs(crate), [trackID])
     }
 }
+
+// Reproduce the coordinator's materialize -> remote-refresh -> outbox sequence.
+extension PublicationMappingTests {
+    func testChangedRemoteBlocksNewAndQueuedPublicationRevisions() async throws {
+        let record = try await publish(trackID)
+        let crate = try sharedCrate([trackID])
+        let proof = try XCTUnwrap(record.verifiedMapping)
+        // Remote bytes changed since publication; original and paired local copy did not.
+        PublicationMappingProtocol.body = try JSONSerialization.data(withJSONObject: [
+            ".tag": "file", "id": proof.fileID, "path_display": "/music/\(record.destination)",
+            "content_hash": String(repeating: "0", count: 64), "size": proof.size
+        ])
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [PublicationMappingProtocol.self]
+        let client = DropboxPlaylistTransport(accessToken: "fixture", session: URLSession(configuration: configuration))
+        defer { client.session.invalidateAndCancel() }
+        let pairing = try XCTUnwrap(manager.syncPairing())
+        do {
+            try await DropboxPlaylistSyncCoordinator.verifyPublicationReferences([proof.fileID], root: root, pairing: pairing, client: client, db: manager, scope: TemporaryScope())
+            XCTFail("changed remote accepted before materialization")
+        } catch PlaylistSyncError.mappingBlocked {}
+        do { _ = try await materialize(crate, track: trackID); XCTFail("blocked intent materialized") }
+        catch PlaylistSyncError.mappingBlocked {}
+        XCTAssertTrue(try manager.syncOutbox().isEmpty)
+        try await refresh(record)
+        let done = try await materialize(crate, track: trackID)
+        XCTAssertTrue(done)
+        let queued = try manager.syncOutbox().map { $0.1 }
+        PublicationMappingProtocol.body = try JSONSerialization.data(withJSONObject: [
+            ".tag": "file", "id": proof.fileID, "path_display": "/music/\(record.destination)",
+            "content_hash": String(repeating: "0", count: 64), "size": proof.size
+        ])
+        let mapped = try await DropboxPlaylistSyncCoordinator.refreshRemoteMapping(proof.fileID,
+            root: root, pairing: pairing, client: client, db: manager, scope: TemporaryScope())
+        XCTAssertFalse(mapped)
+        let blocked = try await manager.dbQueue.read { try Data.fetchOne($0, sql: "SELECT value FROM playlist_sync_meta WHERE key=?", arguments: ["publication-blocked:\(record.id.uuidString)"]) }
+        XCTAssertNotNil(blocked)
+        do {
+            try await DropboxPlaylistSyncCoordinator.verifyPublicationReferences([proof.fileID], root: root, pairing: pairing, client: client, db: manager, scope: TemporaryScope())
+            XCTFail("changed remote accepted before upload")
+        } catch PlaylistSyncError.mappingBlocked {}
+        XCTAssertEqual(try manager.syncOutbox().map { $0.1 }, queued)
+        try await refresh(record)
+        try await DropboxPlaylistSyncCoordinator.verifyPublicationReferences([proof.fileID], root: root, pairing: pairing, client: client, db: manager, scope: TemporaryScope())
+        XCTAssertEqual(try manager.syncOutbox().map { $0.1 }, queued)
+    }
+}

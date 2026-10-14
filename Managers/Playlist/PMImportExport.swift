@@ -5,6 +5,8 @@
 //
 
 import Foundation
+import AppKit
+import UniformTypeIdentifiers
 
 // MARK: - Import/Export Result Types
 
@@ -357,5 +359,91 @@ extension PlaylistManager {
         }
         
         return lines.joined(separator: M3UFormat.lineEnding)
+    }
+}
+
+
+// The same snapshot/availability flow serves native menu and bulk-sheet exports.
+enum CrateExportFormat: String, CaseIterable {
+    case m3u = "M3U", tracklist = "Tracklist", rekordbox = "Rekordbox XML"
+    var fileExtension: String { switch self { case .m3u: "m3u"; case .tracklist: "txt"; case .rekordbox: "xml" } }
+}
+
+extension PlaylistManager {
+    @MainActor
+    func prepareExportSnapshot(playlistID: UUID, format: CrateExportFormat) async throws -> CrateExportSnapshot? {
+        let snapshot = try await captureExportSnapshot(playlistID: playlistID)
+        guard !snapshot.tracks.isEmpty else { throw CrateExportError.empty }
+        let available = snapshot.tracks.filter { format == .tracklist ? $0.hasDisplayMetadata : $0.localURL != nil }
+        guard available.count != snapshot.tracks.count else { return snapshot }
+        let missing = snapshot.tracks.filter { format == .tracklist ? !$0.hasDisplayMetadata : $0.localURL == nil }
+        let alert = NSAlert()
+        alert.messageText = "Unavailable tracks in \(snapshot.name)"
+        alert.informativeText = missing.map { "• " + $0.title }.joined(separator: "\n")
+            + "\n\nExport available tracks will export \(available.count) of \(snapshot.tracks.count) tracks."
+        alert.addButton(withTitle: "Cancel")
+        if !available.isEmpty { alert.addButton(withTitle: "Export available tracks (\(available.count))") }
+        guard alert.runModal() == .alertSecondButtonReturn else { return nil }
+        return CrateExportSnapshot(name: snapshot.name, tracks: available)
+    }
+
+    @MainActor
+    func exportCrate(playlistID: UUID, format: CrateExportFormat, copy: Bool = false) {
+        Task { @MainActor in
+            do {
+                guard let snapshot = try await prepareExportSnapshot(playlistID: playlistID, format: format) else { return }
+                var numbered = true
+                var includeLabel = false
+                if format == .tracklist {
+                    let options = NSAlert()
+                    options.messageText = copy ? "Copy tracklist" : "Save tracklist"
+                    options.addButton(withTitle: "Continue")
+                    options.addButton(withTitle: "Cancel")
+                    let numbering = NSButton(checkboxWithTitle: "Number tracks", target: nil, action: nil)
+                    numbering.state = .on
+                    let labels = NSButton(checkboxWithTitle: "Include labels", target: nil, action: nil)
+                    let stack = NSStackView(views: [numbering, labels])
+                    stack.orientation = .vertical
+                    stack.alignment = .leading
+                    options.accessoryView = stack
+                    guard options.runModal() == .alertFirstButtonReturn else { return }
+                    numbered = numbering.state == .on
+                    includeLabel = labels.state == .on
+                }
+                if copy {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(TracklistFormatter.render(snapshot.tracks, numbered: numbered, includeLabel: includeLabel), forType: .string)
+                    NotificationManager.shared.addMessage(.info, "Copied tracklist (\(snapshot.tracks.count) tracks)")
+                    return
+                }
+                let panel = NSSavePanel()
+                panel.nameFieldStringValue = FilesystemUtils.sanitizeFilename(snapshot.name) + "." + format.fileExtension
+                panel.allowedContentTypes = [UTType(filenameExtension: format.fileExtension) ?? .data]
+                guard await panel.begin() == .OK, let url = panel.url else { return }
+                try writeExportSnapshot(snapshot, format: format, to: url, numbered: numbered, includeLabel: includeLabel)
+                NotificationManager.shared.addMessage(.info, "Exported \(snapshot.name) (\(snapshot.tracks.count) tracks)")
+            } catch { NotificationManager.shared.addMessage(.error, error.localizedDescription) }
+        }
+    }
+
+    func writeExportSnapshot(_ snapshot: CrateExportSnapshot, format: CrateExportFormat, to url: URL,
+                             numbered: Bool = true, includeLabel: Bool = false) throws {
+        let data: Data
+        switch format {
+        case .tracklist:
+            data = Data(TracklistFormatter.render(snapshot.tracks, numbered: numbered, includeLabel: includeLabel).utf8)
+        case .rekordbox:
+            data = try RekordboxExporter.render(snapshot)
+        case .m3u:
+            var lines = ["#EXTM3U"]
+            for track in snapshot.tracks {
+                guard let local = track.localURL else { throw CrateExportError.unavailableMedia }
+                let duration = track.duration.flatMap { $0.isFinite && $0 >= 0 ? Int(exactly: $0.rounded(.down)) : nil } ?? -1
+                lines.append("#EXTINF:\(duration),\(track.artist) - \(track.title)")
+                lines.append(local.path)
+            }
+            data = Data(lines.joined(separator: "\r\n").utf8)
+        }
+        try data.write(to: url, options: .atomic)
     }
 }

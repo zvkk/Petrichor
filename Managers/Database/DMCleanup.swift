@@ -89,16 +89,25 @@ extension DatabaseManager {
     }
     
     /// Remove specific tracks and clean up entities and pins orphaned by them.
-    func cleanupAfterTrackRemoval(_ tracks: [Track]) async throws {
+    @discardableResult
+    func cleanupAfterTrackRemoval(_ tracks: [Track]) async throws -> Int {
         let trackIds = tracks.compactMap(\.trackId)
-        guard !trackIds.isEmpty else { return }
-        
-        Logger.info("Cleaning up after removing \(trackIds.count) tracks...")
-        
-        try await dbQueue.write { db in
+        guard !trackIds.isEmpty else { return 0 }
+
+        return try await dbQueue.write { db in
+            // Automatic missing-file cleanup must retain published physical originals and crate memberships.
+            // Explicit user removal has separate owners and keeps its existing semantics.
+            let publications = try Self.publicationRecords(db)
+            let protected = Set(publications.map(\.trackID))
+            var blocked = Set<Int64>()
+            for record in publications where trackIds.contains(record.trackID) && blocked.insert(record.trackID).inserted {
+                try db.execute(sql: "INSERT OR REPLACE INTO playlist_sync_meta VALUES (?, ?)",
+                               arguments: ["publication-blocked:\(record.id.uuidString)", Data(record.id.uuidString.utf8)])
+            }
+            let removable = trackIds.filter { !protected.contains($0) }
             var removedTrackCount = 0
-            for start in stride(from: 0, to: trackIds.count, by: 500) {
-                let ids = Array(trackIds[start..<min(start + 500, trackIds.count)])
+            for start in stride(from: 0, to: removable.count, by: 500) {
+                let ids = Array(removable[start..<min(start + 500, removable.count)])
                 removedTrackCount += try Track
                     .filter(ids.contains(Track.Columns.trackId))
                     .deleteAll(db)
@@ -113,6 +122,7 @@ extension DatabaseManager {
             if removedPinCount > 0 {
                 Logger.info("Removed \(removedPinCount) orphaned pinned items")
             }
+            return removedTrackCount
         }
     }
 

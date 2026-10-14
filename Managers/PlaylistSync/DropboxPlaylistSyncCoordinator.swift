@@ -169,9 +169,11 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                     var resolved: [Int64: String] = [:]
                     for member in intent.members where member.fileId == nil {
                         guard let id = member.localTrackID else { throw PlaylistSyncError.mappingBlocked }
+                        if let published = try db.publicationFileID(trackID: id) { resolved[id] = published; continue }
                         resolved[id] = try await mapLocal(id, snapshotPath: member.localPath, root: root, pairing: activePairing, client: client, db: db)
                     }
-                    _ = try db.materializeSyncIntent(state.localID, generation: intent.generation, resolved: resolved)
+                    let validations = try await db.validatePublicationIntent(state.localID, generation: intent.generation, resolved: resolved)
+                    _ = try db.materializeSyncIntent(state.localID, generation: intent.generation, resolved: resolved, publicationValidations: validations)
                 } catch PlaylistSyncError.authentication { throw PlaylistSyncError.authentication }
                 catch PlaylistSyncError.writePermission { throw PlaylistSyncError.writePermission }
                 catch PlaylistSyncError.pairingChanged { throw PlaylistSyncError.pairingChanged }
@@ -205,12 +207,10 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             }
             // Mapping failure affects projection only; full remote references stay durable.
             for ref in try db.allSyncFileIDs() {
-                do { try await mapRemote(ref, root: root, pairing: activePairing, client: client, db: db) }
+                do { _ = try await Self.refreshRemoteMapping(ref, root: root, pairing: activePairing, client: client, db: db) }
                 catch PlaylistSyncError.authentication { throw PlaylistSyncError.authentication }
                 catch PlaylistSyncError.writePermission { throw PlaylistSyncError.writePermission }
                 catch PlaylistSyncError.pairingChanged { throw PlaylistSyncError.pairingChanged }
-                catch PlaylistSyncError.mappingBlocked { try db.invalidateSyncMapping(ref) }
-                catch DropboxRequestError.notFound { try db.invalidateSyncMapping(ref) }
                 catch { /* Transient transport failure retains earlier verified mapping. */ }
             }
             // Exact bodies in immutable queue order; failed parent stops this playlist's chain.
@@ -252,8 +252,14 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         try db.saveSyncMapping(fileID: fileID, trackID: id, hash: hash, expectedPath: path)
         return fileID
     }
-    private func mapRemote(_ fileID: String, root: URL, pairing: SyncPairing, client: DropboxPlaylistTransport, db: DatabaseManager) async throws {
-        try await DropboxPlaylistMapping.refreshRemote(fileID, root: root, remoteRootPath: pairing.remoteRootPath, client: client, db: db)
+    /// The mapping owner has already scoped definitive failures; the coordinator must not invalidate them again.
+    nonisolated static func refreshRemoteMapping(_ fileID: String, root: URL, pairing: SyncPairing,
+                                                client: DropboxPlaylistTransport, db: DatabaseManager,
+                                                scope: any PublicationScopeAccess = SecurityScopedPublicationAccess()) async throws -> Bool {
+        do {
+            try await DropboxPlaylistMapping.refreshRemote(fileID, root: root, remoteRootPath: pairing.remoteRootPath, client: client, db: db, scope: scope)
+            return true
+        } catch PlaylistSyncError.mappingBlocked { return false }
     }
 
     func summary(for id: UUID) -> String {

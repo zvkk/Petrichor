@@ -27,7 +27,7 @@ final class PublicationSource {
     let journal: PublicationJournal
     private let manager: DatabaseManager
     private let directory: URL
-    private let scope: any PublicationScopeAccess
+    let scope: any PublicationScopeAccess
     // Test observation seam runs between bounded capture and independent re-read.
     var afterCapture: (() throws -> Void)?
     init(manager: DatabaseManager, snapshotDirectory: URL, scope: any PublicationScopeAccess = SecurityScopedPublicationAccess()) {
@@ -121,7 +121,7 @@ final class PublicationSource {
             }
         }
     }
-    private func selectedSource(_ id: Int64) throws -> (path: String, folder: String, bookmark: Data) {
+    func selectedSource(_ id: Int64) throws -> (path: String, folder: String, bookmark: Data) {
         try manager.dbQueue.read { db in
             guard let row = try Row.fetchOne(db, sql: "SELECT t.path, f.path AS folder, f.bookmark_data FROM tracks t JOIN folders f ON f.id=t.folder_id WHERE t.id=?", arguments: [id]),
                   let bookmark: Data = row["bookmark_data"] else { throw PublicationError.unavailableSource }
@@ -135,7 +135,7 @@ final class PublicationSource {
                                        modifiedSeconds: Int64(info.st_mtimespec.tv_sec), modifiedNanoseconds: Int64(info.st_mtimespec.tv_nsec),
                                        changedSeconds: Int64(info.st_ctimespec.tv_sec), changedNanoseconds: Int64(info.st_ctimespec.tv_nsec))
     }
-    private static func openDirectory(_ path: String) throws -> Int32 {
+    static func openDirectory(_ path: String) throws -> Int32 {
         // Reject symlinks in every component, including the authorized root's ancestors.
         var fd = open("/", O_RDONLY | O_DIRECTORY)
         guard fd >= 0 else { throw PublicationError.unavailableScope }

@@ -3,7 +3,7 @@ import GRDB
 import XCTest
 @testable import Petrichor
 
-final class PublicationServiceTests: XCTestCase {
+class PublicationTestCase: XCTestCase {
     struct TemporaryScope: PublicationScopeAccess {
         func access(bookmark: Data, expectedPath: String) throws -> PublicationScopeLease {
             guard bookmark == Data("fixture".utf8) else { throw PublicationError.unavailableScope }
@@ -41,6 +41,9 @@ final class PublicationServiceTests: XCTestCase {
         service = nil; manager = nil
         try FileManager.default.removeItem(at: directory)
     }
+}
+
+final class PublicationServiceTests: PublicationTestCase {
     actor Fake: PublicationTransport {
         var remote: PublicationRemoteProof?
         var expected: PublicationRemoteProof

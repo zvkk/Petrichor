@@ -854,7 +854,9 @@ extension DatabaseManager {
         
         guard !trackIdsToRemove.isEmpty else { return }
         
-        let removedCount = trackIdsToRemove.count
+        // Count only rows actually removed; publication originals are retained by cleanup.
+        let removedCount = try await cleanupAfterTrackRemoval(tracksToRemove)
+        guard removedCount > 0 else { return }
 
         await globalScanState?.incrementTracksRemoved(by: removedCount)
         if let globalScanState {
@@ -868,9 +870,6 @@ extension DatabaseManager {
                 )
             }
         }
-        
-        // Remove tracks and their orphaned metadata in one transaction.
-        try await cleanupAfterTrackRemoval(tracksToRemove)
         
         // Report results to user
         await MainActor.run {

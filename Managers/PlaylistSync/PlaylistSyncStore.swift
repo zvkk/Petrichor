@@ -153,6 +153,7 @@ extension DatabaseManager {
                 let currentPath = try String.fetchOne(db, sql: "SELECT path FROM tracks WHERE id = ?", arguments: [trackID])
                 guard currentPath == expectedPath else { throw PlaylistSyncError.mappingBlocked }
             }
+            if try Self.publicationRecords(db).contains(where: { $0.verifiedMapping?.fileID == fileID }) { return }
             let previous = try Int64.fetchOne(db, sql: "SELECT track_id FROM playlist_sync_mapping WHERE file_id = ?", arguments: [fileID])
             let previousHash = try String.fetchOne(db, sql: "SELECT content_hash FROM playlist_sync_mapping WHERE file_id = ?", arguments: [fileID])
             try db.execute(sql: "INSERT OR REPLACE INTO playlist_sync_mapping VALUES (?, ?, ?)", arguments: [fileID, trackID, hash])
@@ -177,6 +178,13 @@ extension DatabaseManager {
     /// Definitively unavailable/mismatched audio invalidates only native projection, never wire membership.
     func invalidateSyncMapping(_ fileID: String) throws {
         try dbQueue.write { db in
+            let publications = try Self.publicationRecords(db).filter { $0.verifiedMapping?.fileID == fileID }
+            if !publications.isEmpty {
+                for record in publications {
+                    try db.execute(sql: "INSERT OR REPLACE INTO playlist_sync_meta VALUES (?, ?)", arguments: ["publication-blocked:\(record.id.uuidString)", Data(record.id.uuidString.utf8)])
+                }
+                return
+            }
             let count = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM playlist_sync_mapping WHERE file_id = ?", arguments: [fileID]) ?? 0
             guard count > 0 else { return }
             try db.execute(sql: "DELETE FROM playlist_sync_mapping WHERE file_id = ?", arguments: [fileID])
@@ -215,11 +223,12 @@ extension DatabaseManager {
     func syncMapping(fileID: String) throws -> Int64? {
         try dbQueue.read { try Int64.fetchOne($0, sql: "SELECT track_id FROM playlist_sync_mapping WHERE file_id = ?", arguments: [fileID]) }
     }
-    func materializeSyncIntent(_ id: UUID, generation: Int64, resolved: [Int64: String]) throws -> Bool {
+    func materializeSyncIntent(_ id: UUID, generation: Int64, resolved: [Int64: String], publicationValidations: [PublicationValidation] = []) throws -> Bool {
         try dbQueue.write { db in
             guard let state = try self.syncState(db, localID: id), let intent = state.intent, intent.generation == generation else { return false }
             guard let pairingData = try Data.fetchOne(db, sql: "SELECT value FROM playlist_sync_meta WHERE key = 'pairing'") else { throw PlaylistSyncError.notPaired }
             let pairing = try JSONDecoder().decode(SyncPairing.self, from: pairingData)
+            try Self.validatePublicationMembers(db, members: intent.members, resolved: resolved, validations: publicationValidations)
             let members = try intent.members.map { member -> SyncMember in
                 if member.fileId != nil { return member }
                 guard let local = member.localTrackID, let remote = resolved[local] else { throw PlaylistSyncError.mappingBlocked }
@@ -332,8 +341,16 @@ extension DatabaseManager {
                 let head = graph.heads[0]
                 guard let revision = revisions.first(where: { $0.revisionId == head }) else { return }
                 var members: [SyncMember] = []
+                let publicationIDs = Set(try Self.publicationRecords(db).compactMap { $0.verifiedMapping?.fileID })
                 for ref in revision.tracks {
-                    let local = try Int64.fetchOne(db, sql: "SELECT m.track_id FROM playlist_sync_mapping m JOIN tracks t ON t.id = m.track_id WHERE m.file_id = ?", arguments: [ref.fileId])
+                    let existing = state.members.first { $0.fileId == ref.fileId }?.localTrackID
+                    let publicationOwned = publicationIDs.contains(ref.fileId)
+                    let local: Int64?
+                    if publicationOwned, let existing {
+                        local = existing
+                    } else {
+                        local = try Int64.fetchOne(db, sql: "SELECT m.track_id FROM playlist_sync_mapping m JOIN tracks t ON t.id = m.track_id WHERE m.file_id = ?", arguments: [ref.fileId])
+                    }
                     members.append(SyncMember(fileId: ref.fileId, localTrackID: local))
                 }
                 let expectedIDs = members.compactMap(\.localTrackID).reduce(into: [Int64]()) { result, id in if !result.contains(id) { result.append(id) } }

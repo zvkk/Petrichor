@@ -105,7 +105,7 @@ final class PublicationJournal {
         }
     }
     /// The completion owner can extend this transaction with the publication mapping.
-    func complete(_ record: Publication, proof: PublicationRemoteProof, allowingCancellation: Bool = false) throws {
+    func complete(_ record: Publication, proof: PublicationRemoteProof, allowingCancellation: Bool = false, validation: PublicationValidation? = nil) throws {
         try database.write { db in
             guard var current = try Self.record(record.id, in: db),
                   current.generation == record.generation ||
@@ -113,10 +113,15 @@ final class PublicationJournal {
                   current.snapshot == record.snapshot, current.destination == record.destination else {
                 throw PublicationError.invalidTransition
             }
+            guard let validation, validation.record == record else { throw PlaylistSyncError.mappingBlocked }
+            // The receipt predates an allowed cancellation increment; validate all other SQL identity.
+            try validation.consume(db, allowingCancellation: allowingCancellation)
             current.state = .completed
             current.verifiedMapping = proof
             current.error = nil
             try Self.save(current, in: db)
+            try DatabaseManager.savePublicationMapping(current, in: db)
+            db.afterNextTransaction { _ in NotificationCenter.default.post(name: .playlistSyncLocalEdit, object: nil) }
         }
     }
     /// A typed provider rejection plus an exact absent lookup proves finish did not commit.

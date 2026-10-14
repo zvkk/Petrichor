@@ -163,7 +163,11 @@ actor PublicationService {
             throw afterFinish ? PublicationError.contentMismatch : PublicationError.needsNewName
         }
         guard remote.fileID.hasPrefix("id:"), remote.fileID.count > 3 else { throw PublicationError.contentMismatch }
-        do { try await verify(record) }
+        let validation: PublicationValidation
+        do {
+            let source = source
+            validation = try await Task.detached(priority: .utility) { try source.validatePublication(record) }.value
+        }
         catch {
             let category = DropboxPublicationTransport.classify(error)
             if [.sourceChanged, .unavailableSource, .unavailableScope, .integrity].contains(category) {
@@ -173,7 +177,7 @@ actor PublicationService {
             throw error
         }
         try transport.checkValidity()
-        try source.journal.complete(record, proof: remote, allowingCancellation: afterFinish)
+        try source.journal.complete(record, proof: remote, allowingCancellation: afterFinish, validation: validation)
         return true
     }
 }

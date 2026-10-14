@@ -68,3 +68,13 @@ Primary pinned SwiftLint reports **11 inherited serious errors, 463 warnings, ze
 Phone companion at `251fae0bfca6b41b7d3e100180fd8fcbcd0a3b05`: full npm test passes **182 suites / 2,760 tests**, with one inherited opt-in search benchmark skipped; typecheck passes, lint zero errors/32 inherited warnings. No dependency installation. Latest accepted phone UI and native player/layout remain inherited.
 
 The source PRs are [Mac #3](https://github.com/zvkk/Petrichor/pull/3) and [phone #96](https://github.com/zvkk/crate-app/pull/96). Source is ready for code review; all A1–A7, Plan1 live acceptance, hands-on Settings/keyboard/accessibility, physical phone/decoder/playback and audible acceptance remain **OPEN**. The installed app is unchanged. No real account upload, installation, main/QA data change, merge to main or release occurred. Snapshot/journal garbage collection is not implemented. Earlier sections remain chronological worker verification checkpoints, not current PR/push status.
+
+## Review fixes — 14 October 2026
+
+Mac publication-owned references now receive fresh remote and local proof verification before intent materialization and before outbox upload. Blocked immutable bodies retain their IDs, bytes and parent chains for recovery. The regression covers changed remote bytes before creation, changed bytes after queuing, and successful retry after proof restoration.
+
+The current Plan2 review-fix commit `8dcedce` is merged into this branch. Combined native build/XCTest at `ad81b30` passes: **133 passed, one inherited skip, zero failures**. Log: `/private/tmp/crate-plan3-review/mac-merged-tests.log`. Pinned SwiftLint: same 11 inherited errors, 451 warnings, no new errors. Diff whitespace passes.
+
+Phone companion fix `cb372af` classifies metadata path lookup failures and moved-outside audio as item failures while preserving root/auth failures. Full phone checks pass: typecheck, lint (zero errors / 32 inherited warnings), **2,765 tests passed / one inherited skip**. Logs: `/private/tmp/crate-plan3-review/phone-fix-*.log`.
+
+No installation, real Dropbox upload or live playback was performed. Existing live A1–A7 acceptance remains open.

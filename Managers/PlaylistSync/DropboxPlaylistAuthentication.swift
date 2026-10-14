@@ -12,6 +12,15 @@ struct DropboxSyncCredentials: Codable {
 /// Separate native keychain item; no logging of authorization URLs, codes or tokens.
 enum DropboxSyncVault {
     static var key: String { "\(Bundle.main.bundleIdentifier ?? "org.Petrichor").dropbox.playlist-sync" }
+    /// Presentation must never retrieve secrets or display a Keychain permission prompt.
+    /// An interaction-required result still means a saved connection may exist; explicit
+    /// Connect/Sync owns reauthorization rather than showing a false disconnected state.
+    static func hasSavedCredentials(check: (CFDictionary) -> OSStatus = { SecItemCopyMatching($0, nil) }) -> Bool {
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrAccount as String: key,
+            kSecReturnAttributes as String: true, kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail,
+            kSecMatchLimit as String: kSecMatchLimitOne]
+        return check(query as CFDictionary) != errSecItemNotFound
+    }
     static func load() throws -> DropboxSyncCredentials? {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrAccount as String: key,
             kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]

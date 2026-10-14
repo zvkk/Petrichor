@@ -32,12 +32,12 @@ enum PlaylistMenuBuilder {
         if playlist.type == .regular && playlist.isContentEditable {
             let sync = DropboxPlaylistSyncCoordinator.shared
             if let state = sync.states.first(where: { $0.localID == playlist.id }) {
-                items.append(.button(title: String(localized: "Sync Now")) { Task { await sync.syncNow() } })
+                items.append(.button(title: String(localized: "Sync now")) { Task { await sync.syncNow() } })
                 if state.issue == "conflict" {
-                    items.append(.button(title: String(localized: "Resolve Sync Conflict…")) { sync.resolve(state) })
+                    items.append(.button(title: String(localized: "Review changes…")) { sync.resolve(state) })
                 }
             } else {
-                items.append(.button(title: String(localized: "Share with iPhone")) { sync.share(playlist) })
+                items.append(.button(title: String(localized: "Share with iPhone")) { if sync.isConnected && sync.isPaired { sync.share(playlist) } else { sync.openConnectionSettings() } })
             }
         }
 

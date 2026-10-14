@@ -380,6 +380,14 @@ extension DatabaseManager {
             let graph = try RevisionGraph(revisions: revisions)
             guard !graph.incomplete, graph.heads == expectedHeads.sorted(), graph.heads.contains(chosen),
                   let selected = revisions.first(where: { $0.revisionId == chosen }) else { throw PlaylistSyncError.staleEditor }
+            // Validate the entire choice before publishing anything. A stale/non-head copy
+            // must never create an extra crate or silently degrade Keep both to Use selected.
+            if let keepBoth {
+                guard keepBoth != chosen, graph.heads.contains(keepBoth),
+                      let other = revisions.first(where: { $0.revisionId == keepBoth }), !other.deleted else {
+                    throw PlaylistSyncError.staleEditor
+                }
+            }
             let device = try self.syncDeviceID(db)
             let final = try self.publishSyncContent(db, library: selected.libraryId, shared: state.sharedID,
                 device: device, parents: graph.heads, name: selected.name, deleted: selected.deleted, refs: selected.tracks.map(\.fileId))

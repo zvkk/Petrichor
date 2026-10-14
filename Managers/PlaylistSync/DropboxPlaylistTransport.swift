@@ -27,6 +27,7 @@ final class DropboxPlaylistTransport {
     let accessToken: String
     let namespace: String?
     private var appFolderRoot = false
+    var publicationValidity: (() throws -> Void)?
     let session: URLSession
     init(accessToken: String, namespace: String? = nil, session: URLSession = .shared) {
         self.accessToken = accessToken; self.namespace = namespace; self.session = session
@@ -58,7 +59,9 @@ final class DropboxPlaylistTransport {
             request.httpBody = json
         }
         for attempt in 0..<3 {
+            try publicationValidity?()
             let (data, response) = try await session.data(for: request)
+            try publicationValidity?()
             guard let http = response as? HTTPURLResponse else { throw PlaylistSyncError.transport(0) }
             if (200..<300).contains(http.statusCode) { return data }
             if http.statusCode == 401 { throw PlaylistSyncError.authentication }
@@ -75,6 +78,10 @@ final class DropboxPlaylistTransport {
                 // Never expose the response; only classify known transport tags.
                 let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
                 let summary = object?["error_summary"] as? String ?? ""
+                if publicationValidity != nil {
+                    if summary.contains("not_file") || summary.contains("conflict") { throw PublicationError.needsNewName }
+                    if summary.contains("invalid_root") || summary.contains("no_permission") { throw PublicationError.root }
+                }
                 if summary.contains("not_found") { throw DropboxRequestError.notFound }
                 if summary.contains("conflict") { throw DropboxRequestError.conflict }
                 if summary.contains("reset") { throw DropboxRequestError.cursorReset }
@@ -87,6 +94,55 @@ final class DropboxPlaylistTransport {
             throw PlaylistSyncError.transport(http.statusCode)
         }
         throw PlaylistSyncError.transport(0)
+    }
+    /// Dedicated audio endpoint: no v1 body/download limits and no blind mutation retries.
+    func publicationRequest(_ operation: String, arguments: [String: Any], bytes: Data) async throws -> Data {
+        var request = URLRequest(url: URL(string: "https://content.dropboxapi.com/2/files/upload_session/" + operation)!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 60
+        request.setValue("Bearer " + accessToken, forHTTPHeaderField: "Authorization")
+        if let namespace, !appFolderRoot {
+            let root = try JSONSerialization.data(withJSONObject: [".tag": "namespace_id", "namespace_id": namespace])
+            request.setValue(String(data: root, encoding: .utf8), forHTTPHeaderField: "Dropbox-API-Path-Root")
+        }
+        // JSONSerialization's ASCII output also handles non-ASCII destination paths in headers.
+        let json = try JSONSerialization.data(withJSONObject: arguments, options: [.sortedKeys])
+        let raw = String(data: json, encoding: .utf8)!
+        let ascii = raw.utf16.map { $0 < 128 ? String(UnicodeScalar($0)!) : String(format: "\\u%04x", $0) }.joined()
+        request.setValue(ascii, forHTTPHeaderField: "Dropbox-API-Arg")
+        request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+        request.httpBody = bytes
+        let data: Data
+        let response: URLResponse
+        do {
+            try publicationValidity?()
+            (data, response) = try await session.data(for: request)
+        }
+        catch let error as PublicationError { throw error }
+        catch { throw PublicationError.retryable }
+        try publicationValidity?()
+        guard let http = response as? HTTPURLResponse else { throw PublicationError.retryable }
+        if (200..<300).contains(http.statusCode) { return data }
+        if http.statusCode == 401 || http.statusCode == 403 { throw PublicationError.auth }
+        if http.statusCode == 507 { throw PublicationError.quota }
+        if http.statusCode == 422 { throw PublicationError.root }
+        let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        let summary = object?["error_summary"] as? String ?? ""
+        if http.statusCode == 400,
+           String(data: data, encoding: .utf8)?.contains("does not have the required scope 'files.content.write'") == true {
+            throw PublicationError.auth
+        }
+        if summary.contains("content_hash_mismatch") { throw PublicationError.contentMismatch }
+        if summary.contains("insufficient_space") { throw PublicationError.quota }
+        if summary.contains("invalid_root") || summary.contains("no_permission") { throw PublicationError.root }
+        if summary.contains("required_scope") || summary.contains("missing_scope") { throw PublicationError.auth }
+        if summary.contains("incorrect_offset"),
+           let error = object?["error"] as? [String: Any], let offset = error["correct_offset"] as? UInt64 {
+            throw PublicationOffsetError.correct(offset)
+        }
+        if summary.contains("not_found") || summary.contains("closed") { throw PublicationError.sessionExpired }
+        if summary.contains("conflict") { throw PublicationError.needsNewName }
+        throw PublicationError.retryable
     }
     func account() async throws -> DropboxSyncAccount {
         try JSONDecoder().decode(DropboxSyncAccount.self, from: await request("users/get_current_account", arguments: nil))

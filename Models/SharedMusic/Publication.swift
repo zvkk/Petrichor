@@ -9,6 +9,7 @@ enum PublicationState: String, Codable, CaseIterable, Sendable {
 enum PublicationError: String, Error, Codable, Sendable {
     case invalidDestination, unavailableSource, unavailableScope, sourceChanged, needsConfirmation
     case needsNewName, integrity, invalidTransition, storage
+    case contentMismatch, auth, root, quota, retryable, cancelled, sessionExpired, finishUncertain
 }
 
 struct PublicationFileIdentity: Codable, Equatable, Sendable {

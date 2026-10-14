@@ -244,11 +244,14 @@ final class PublicationSource {
         let sourceLease = try scope.access(bookmark: selected.bookmark, expectedPath: selected.folder)
         let rootLease = try scope.access(bookmark: record.snapshot.pairing.localRootBookmark, expectedPath: record.snapshot.pairing.localRootPath)
         try withExtendedLifetime((sourceLease, rootLease)) {
-            let sourceRoot = try Self.openDirectory(sourceLease.url.path), root = try Self.openDirectory(rootLease.url.path)
-            defer { close(sourceRoot); close(root) }
+            let sourceRoot = try Self.openDirectory(sourceLease.url.path)
+            defer { close(sourceRoot) }
+            let root = try Self.openDirectory(rootLease.url.path)
+            defer { close(root) }
             let source = try Self.openRelative(String(selected.path.dropFirst(prefix.count)), root: sourceRoot)
+            defer { close(source) }
             let copy = try Self.openRelative(record.destination, root: root)
-            defer { close(source); close(copy) }
+            defer { close(copy) }
             guard try Self.identity(source) == record.snapshot.sourceIdentity,
                   try Self.stream(source).sha == record.snapshot.sha256,
                   try Self.identity(copy) == record.snapshot.pairedIdentity,

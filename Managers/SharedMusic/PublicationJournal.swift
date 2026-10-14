@@ -80,6 +80,56 @@ final class PublicationJournal {
                               record.destination, record.state.rawValue, try record.uploadSession.map(encoder.encode),
                               try record.verifiedMapping.map(encoder.encode), record.error?.rawValue])
     }
+    /// Transactional generation claim invalidates stale workers, including after process recovery.
+    func claim(_ id: PublicationID) throws -> Publication? {
+        try database.write { db in
+            guard var record = try Self.record(id, in: db),
+                  ![.completed, .cancelled, .capturing].contains(record.state) else { return nil }
+            try db.execute(sql: "UPDATE shared_music_publication SET generation = generation + 1 WHERE id = ?", arguments: [id.uuidString])
+            record = try Self.record(id, in: db)!
+            record.state = .uploading
+            record.error = nil
+            try Self.save(record, in: db)
+            return record
+        }
+    }
+    func cancel(_ id: PublicationID) throws {
+        try database.write { db in
+            guard let record = try Self.record(id, in: db), record.state != .completed else { return }
+            try db.execute(sql: """
+                UPDATE shared_music_publication SET generation = generation + 1, state = 'cancelled',
+                error = CASE WHEN error = 'finishUncertain' THEN error ELSE 'cancelled' END WHERE id = ?
+                """, arguments: [id.uuidString])
+        }
+    }
+    /// The completion owner can extend this transaction with the publication mapping.
+    func complete(_ record: Publication, proof: PublicationRemoteProof, allowingCancellation: Bool = false) throws {
+        try database.write { db in
+            guard var current = try Self.record(record.id, in: db),
+                  current.generation == record.generation ||
+                    (allowingCancellation && current.state == .cancelled && current.generation == record.generation + 1),
+                  current.snapshot == record.snapshot, current.destination == record.destination else {
+                throw PublicationError.invalidTransition
+            }
+            current.state = .completed
+            current.verifiedMapping = proof
+            current.error = nil
+            try Self.save(current, in: db)
+        }
+    }
+    /// A typed provider rejection plus an exact absent lookup proves finish did not commit.
+    func rejectFinish(_ record: Publication, error: PublicationError) throws {
+        try database.write { db in
+            guard var current = try Self.record(record.id, in: db),
+                  current.generation == record.generation ||
+                    (current.state == .cancelled && current.generation == record.generation + 1),
+                  current.state != .completed, current.snapshot == record.snapshot,
+                  current.destination == record.destination else { throw PublicationError.invalidTransition }
+            if current.state != .cancelled { current.state = .failed }
+            current.error = error
+            try Self.save(current, in: db)
+        }
+    }
     /// Interrupted capture cannot become uploadable on restart. Originals and paired files are never removed.
     func recoverInterruptedCaptures() throws {
         try database.write { db in

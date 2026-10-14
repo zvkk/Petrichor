@@ -87,8 +87,10 @@ final class PublicationJournal {
                   ![.completed, .cancelled, .capturing].contains(record.state) else { return nil }
             try db.execute(sql: "UPDATE shared_music_publication SET generation = generation + 1 WHERE id = ?", arguments: [id.uuidString])
             record = try Self.record(id, in: db)!
-            record.state = .uploading
-            record.error = nil
+            if record.error != .finishUncertain {
+                record.state = .uploading
+                record.error = nil
+            }
             try Self.save(record, in: db)
             return record
         }

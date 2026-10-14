@@ -49,6 +49,12 @@ actor PublicationService {
             let transport = try await factory(record)
             // A previous finish may have committed even when its response was lost.
             if try await reconcile(record, transport: transport) { return }
+            // Only a successful exact absent lookup permits clearing prior finish uncertainty.
+            if record.error == .finishUncertain {
+                record.error = nil
+                record.state = .uploading
+                try source.journal.save(record)
+            }
             try await verify(record)
             let descriptor = open(record.snapshot.snapshotPath!, O_RDONLY | O_NOFOLLOW)
             guard descriptor >= 0 else { throw PublicationError.sourceChanged }

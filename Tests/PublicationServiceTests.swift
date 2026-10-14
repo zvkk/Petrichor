@@ -51,6 +51,7 @@ final class PublicationServiceTests: XCTestCase {
         var failAppend: PublicationError?
         var failureOffset: UInt64 = 0
         var metadataFailureAfterFinish = false
+        var metadataError: PublicationError?
         var cancelTaskOnFinish = false
         var commitOnFinish = true
         var finishFailure: PublicationError?
@@ -64,6 +65,7 @@ final class PublicationServiceTests: XCTestCase {
         }
         func metadataAtDestination() async throws -> PublicationRemoteProof? {
             if Task.isCancelled { throw CancellationError() }
+            if let metadataError { self.metadataError = nil; throw metadataError }
             if metadataFailureAfterFinish && finishes > 0 { metadataFailureAfterFinish = false; throw PublicationError.retryable }
             return remote
         }
@@ -87,6 +89,7 @@ final class PublicationServiceTests: XCTestCase {
         func setFailure(_ error: PublicationError, offset: UInt64 = 0) { failAppend = error; failureOffset = offset }
         func setFinishFailure(_ error: PublicationError) { finishFailure = error; commitOnFinish = false }
         func setTaskCancellation(commit: Bool) { cancelTaskOnFinish = true; commitOnFinish = commit }
+        func setMetadataError(_ error: PublicationError) { metadataError = error }
         func setMetadataFailure() { metadataFailureAfterFinish = true }
         func peakCount() -> Int { peak }
         func setLostFinish() { lostFinish = true }
@@ -333,6 +336,26 @@ final class PublicationServiceTests: XCTestCase {
         XCTAssertEqual(try service.journal.record(record.id)?.error, .sourceChanged)
         XCTAssertNil(try service.journal.record(record.id)?.verifiedMapping)
         let counts = await fake.counts(); XCTAssertEqual(counts.0, 1)
+    }
+
+    func testRetryLookupFailurePreservesUncertainFinishAndSessionWithoutSecondStart() async throws {
+        for error: PublicationError in [.auth, .retryable, .root] {
+            let record = try await captured(), fake = Fake(try await captured())
+            await fake.setMetadataFailure()
+            let upload = PublicationService(source: service) { _ in fake }
+            await upload.run(id: record.id)
+            let uncertain = try XCTUnwrap(service.journal.record(record.id))
+            XCTAssertEqual(uncertain.error, .finishUncertain)
+            await fake.setMetadataError(error)
+            await upload.run(id: record.id)
+            let retried = try XCTUnwrap(service.journal.record(record.id))
+            XCTAssertEqual(retried.state, .verifying)
+            XCTAssertEqual(retried.error, .finishUncertain)
+            XCTAssertEqual(retried.uploadSession, uncertain.uploadSession)
+            let counts = await fake.counts(); XCTAssertEqual(counts.0, 1); XCTAssertEqual(counts.1, 1)
+            try await upload.reconcileOutcome(id: record.id)
+            XCTAssertEqual(try service.journal.record(record.id)?.state, .completed)
+        }
     }
 
 }

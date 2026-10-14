@@ -46,3 +46,11 @@ Phone read-only preflight reported passcodeRequired=true. No app process was sto
 Repeatable source commands: phone `nvm use 24`, `npm run typecheck`, `npm run lint`, `npm test`. Mac full XCTest uses existing project/schemePetrichor with destination `platform=macOS,arch=arm64`, pinned Package.resolved and isolated test identity `org.Petrichor.zak.plan1-baseline-tests`; production candidate uses existing `org.Petrichor.zak.debug`. Cross-language check: `python3 docs/verification/verify-dropbox-protocol.py --ios-root <phone-checkout>`. Do not use test identity for the main Mac app, and do not install an old/pre-fix phone build.
 
 Final reviewed iPhone Release build from7c6c67b succeeded. Candidate signature, same signing/keychain identity, connected-device profile/expiry, embedded provider configuration, normal entry point and current UI markers verified. Demo data disabled; migration count13. Private source manifest and build receipt match exact reviewed production code. Candidate is not installed.
+
+## Follow-up review fixes — 14 October 2026
+
+Mac connection summaries, recovery text, and conflict dialogs now use the documented localization APIs; unavailable/needs-adding track counts have English catalog plurals. The isolated Mac test build passed: 39 tests passed, one existing skip, zero failures (`/private/tmp/connected-crate-fixes-mac.log`).
+
+Phone publication now waits for a settled library generation and rechecks it after the outbox read, preventing a rolled-back conflict resolution from reaching transport. Upload failures retain their revision ID so successful acknowledgment clears only that failure, atomically with the outbox acknowledgment. Regression tests cover rollback during publication, successful retry after database reopen, and preservation of a newer unrelated error. Phone typecheck passed; lint has zero errors and the same 32 existing warnings; full suite: 178 suites passed, 2,694 tests passed, one existing suite/test skipped (`/private/tmp/connected-crate-fixes-full-tests.log`).
+
+These fixes have not been installed. Earlier native candidate receipts predate these fixes; a fresh candidate is required for live acceptance. C1–C10 live acceptance remains open. Plan 2 and later implementation remain untouched.

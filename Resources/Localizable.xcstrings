@@ -1,6 +1,50 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld tracks unavailable on this device" : {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld track unavailable on this device"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tracks unavailable on this device"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld tracks need adding to shared music" : {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld track needs adding to shared music"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tracks need adding to shared music"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "" : {
 
     },

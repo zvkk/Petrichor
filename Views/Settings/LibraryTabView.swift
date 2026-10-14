@@ -285,7 +285,7 @@ struct LibraryTabView: View {
             infoButton(
                 isPresented: $showResetInfo,
                 text: String(localized: """
-                                    Removes all folders, tracks, playlists, radio stations, station collections, and pinned items. \
+                                    Removes all folders, tracks, crates, radio stations, station collections, and pinned items. \
                                     Use the checkbox in the confirmation dialog to optionally reset app preferences.
                                     """)
             )
@@ -490,7 +490,7 @@ struct LibraryTabView: View {
         let alert = NSAlert()
         alert.messageText = String(localized: "Reset Library Data")
         alert.informativeText = String(localized: """
-            This will permanently remove all data, including added folders, tracks, playlists, radio stations, \
+            This will permanently remove all data, including added folders, tracks, crates, radio stations, \
             station collections, and pinned items. This action cannot be undone.
             """)
         alert.alertStyle = .critical

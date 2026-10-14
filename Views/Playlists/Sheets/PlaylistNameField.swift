@@ -4,7 +4,7 @@ import SwiftUI
 /// inline title editing rather than a labelled form field.
 struct PlaylistNameField: View {
     @Binding var name: String
-    var placeholder = String(localized: "Playlist Name")
+    var placeholder = String(localized: "Crate name")
 
     var body: some View {
         // Custom placeholder so only the typed text is bold; the placeholder stays regular

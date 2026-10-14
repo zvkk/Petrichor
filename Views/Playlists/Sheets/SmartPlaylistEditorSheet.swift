@@ -84,7 +84,7 @@ struct SmartPlaylistEditorSheet: View {
     private var isEditing: Bool { editingPlaylistID != nil }
 
     private var headerTitle: String {
-        isEditing ? String(localized: "Edit Smart Playlist") : String(localized: "New Smart Playlist")
+        isEditing ? String(localized: "Edit smart crate") : String(localized: "Smart crate")
     }
 
     private var saveButtonTitle: String {

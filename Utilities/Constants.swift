@@ -271,10 +271,10 @@ extension DefaultPlaylists {
             case DefaultPlaylists.recentlyPlayed:
                 return String(localized: "No Recently Played Songs")
             default:
-                return String(localized: "Empty Smart Playlist")
+                return String(localized: "Empty smart crate")
             }
         }
-        return String(localized: "Empty Playlist")
+        return String(localized: "Empty crate")
     }
     
     static func emptyStateText(for playlist: Playlist) -> String {
@@ -287,10 +287,10 @@ extension DefaultPlaylists {
             case DefaultPlaylists.recentlyPlayed:
                 return String(localized: "Songs played in the last week will appear here")
             default:
-                return String(localized: "This smart playlist will update automatically based on its criteria")
+                return String(localized: "This smart crate will update automatically based on its criteria")
             }
         }
-        return String(localized: "Add some tracks to this playlist to get started")
+        return String(localized: "Add some tracks to this crate to get started")
     }
 }
 

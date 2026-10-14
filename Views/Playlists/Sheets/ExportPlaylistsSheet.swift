@@ -45,7 +45,7 @@ struct ExportPlaylistsSheet: View {
             .keyboardShortcut(.escape)
             .focusable(false)
             
-            Text("Export Playlists")
+            Text("Export crates")
                 .font(.headline)
             
             Spacer()
@@ -57,7 +57,7 @@ struct ExportPlaylistsSheet: View {
     
     private var playlistList: some View {
         VStack(spacing: 0) {
-            Text("Select playlists to export:")
+            Text("Select crates to export:")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -99,11 +99,11 @@ struct ExportPlaylistsSheet: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
             
-            Text("No playlists to export")
+            Text("No crates to export")
                 .font(.headline)
                 .foregroundColor(.secondary)
             
-            Text("Create some playlists first")
+            Text("Create some crates first")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -216,8 +216,8 @@ struct ExportPlaylistsSheet: View {
         let playlistsToExport = exportablePlaylists.filter { selectedPlaylistIds.contains($0.id) }
         
         let panel = NSOpenPanel()
-        panel.title = String(localized: "Export Playlists")
-        panel.message = String(localized: "Choose where to save \(playlistsToExport.count) playlist files")
+        panel.title = String(localized: "Export crates")
+        panel.message = String(localized: "Choose where to save \(playlistsToExport.count) M3U playlist files")
         panel.prompt = String(localized: "Export")
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -228,7 +228,7 @@ struct ExportPlaylistsSheet: View {
             guard response == .OK, let directoryURL = panel.url else { return }
             
             isPresented = false
-            NotificationManager.shared.startActivity(String(localized: "Exporting playlists..."))
+            NotificationManager.shared.startActivity(String(localized: "Exporting crates..."))
             
             Task {
                 let result = await playlistManager.exportPlaylists(playlistsToExport, to: directoryURL)
@@ -249,12 +249,12 @@ struct ExportPlaylistsSheet: View {
         }
         
         if result.successful > 0 {
-            let message = String(localized: "Exported \(result.successful) playlists to \(directory.lastPathComponent)")
+            let message = String(localized: "Exported \(result.successful) crates to \(directory.lastPathComponent)")
             notifications.append((.info, message))
         }
         
         if result.totalPlaylists > 0 && result.successful == 0 {
-            let message = String(localized: "Failed to export all \(result.totalPlaylists) playlists")
+            let message = String(localized: "Failed to export all \(result.totalPlaylists) crates")
             notifications.append((.error, message))
         }
         

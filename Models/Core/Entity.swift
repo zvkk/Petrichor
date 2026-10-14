@@ -73,7 +73,7 @@ extension Entity {
         if self is ArtistEntity { return String(localized: "Artist") }
         if self is AlbumEntity { return String(localized: "Album") }
         if let category = self as? CategoryEntity { return category.filterType.singularDisplayName }
-        if self is PlaylistEntity { return String(localized: "Playlist") }
+        if self is PlaylistEntity { return String(localized: "Crate") }
         if self is FolderEntity { return String(localized: "Folder") }
         return ""
     }

@@ -8,7 +8,7 @@ private enum EditorTab: TabbedItem {
 
     var title: String {
         switch self {
-        case .playlist: return String(localized: "Playlist")
+        case .playlist: return String(localized: "Crate")
         case .add: return String(localized: "Add Songs")
         }
     }
@@ -23,7 +23,7 @@ private enum EditorTab: TabbedItem {
 /// (`editingPlaylist == nil`) and editing an existing one.
 ///
 /// The contents are split across two tabs so adding and removing never share a control:
-/// - "Playlist" lists the staged contents (current tracks plus anything added this
+/// - "Crate" lists the staged contents (current tracks plus anything added this
 ///   session); each row removes, and a "Remove All" clears the lot.
 /// - "Add Songs" is a library search; each result adds, and "Add All" adds every match.
 ///   Songs already in the playlist still appear in the matches but are dimmed and have no
@@ -130,7 +130,7 @@ struct RegularPlaylistEditorSheet: View {
             )
         }
         .disabled(isSaving || (isEditing && !didLoad))
-        .alert("Playlist could not be saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+        .alert("Crate could not be saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
             Button("OK") { saveError = nil }
         } message: { Text(saveError ?? "") }
         .frame(width: 640, height: 700)
@@ -146,7 +146,7 @@ struct RegularPlaylistEditorSheet: View {
     // MARK: - Header
 
     private var headerTitle: String {
-        isEditing ? String(localized: "Edit Playlist") : String(localized: "New Playlist")
+        isEditing ? String(localized: "Edit crate") : String(localized: "New crate")
     }
 
     private var saveButtonTitle: String {
@@ -226,7 +226,7 @@ struct RegularPlaylistEditorSheet: View {
         HStack(spacing: 6) {
             Image(systemName: Icons.infoCircle)
                 .font(.system(size: 12))
-            Text("Drag to reorder. This order is shown when the playlist is sorted by \"Custom\".")
+            Text("Drag to reorder. This order is shown when the crate is sorted by \"Custom\".")
                 .font(.subheadline)
             Spacer()
         }
@@ -648,7 +648,7 @@ private struct EditorTrackRow: View {
                     .foregroundColor(.accentColor)
             }
             .buttonStyle(.plain)
-            .help("Add to playlist")
+            .help("Add to crate")
 
         case .remove(let action):
             Button(action: action) {
@@ -657,10 +657,10 @@ private struct EditorTrackRow: View {
                     .foregroundColor(.red)
             }
             .buttonStyle(.plain)
-            .help("Remove from playlist")
+            .help("Remove from crate")
 
         case .inPlaylist:
-            Text("In playlist")
+            Text("In crate")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

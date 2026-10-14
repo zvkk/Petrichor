@@ -19,7 +19,7 @@ struct PlaylistSidebarView: View {
 
             playlistsList
         }
-        .alert("Delete Playlist", isPresented: $showingDeleteConfirmation) {
+        .alert("Delete crate", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {
                 playlistToDelete = nil
             }
@@ -67,18 +67,18 @@ struct PlaylistSidebarView: View {
 
     private var sidebarHeader: some View {
         ListHeader(opaque: true) {
-            Text("Playlists")
+            Text("Crates")
                 .headerTitleStyle()
 
             Spacer()
 
             Menu {
-                Button("New Playlist") {
+                Button("New crate") {
                     playlistManager.showCreateRegularPlaylistModal()
                 }
                 .disabled(!libraryManager.hasLocalMusic)
 
-                Button("New Smart Playlist") {
+                Button("Smart crate") {
                     playlistManager.showCreateSmartPlaylistModal()
                 }
                 .disabled(!libraryManager.hasLocalMusic)
@@ -97,15 +97,15 @@ struct PlaylistSidebarView: View {
             }
             .buttonStyle(.plain)
             .menuIndicator(.hidden)
-            .help("Create New Playlist")
+            .help("New crate")
 
             // Kebab menu button
             Menu {
-                Button("Import Playlists...") {
+                Button("Import crates...") {
                     NotificationCenter.default.post(name: .importPlaylists, object: nil)
                 }
                 
-                Button("Export Playlists...") {
+                Button("Export crates...") {
                     NotificationCenter.default.post(name: .exportPlaylists, object: nil)
                 }
             } label: {
@@ -116,7 +116,7 @@ struct PlaylistSidebarView: View {
                     .hoverEffect(scale: 1.1)
             }
             .buttonStyle(.plain)
-            .help("Playlist Options")
+            .help("Crate options")
         }
     }
 

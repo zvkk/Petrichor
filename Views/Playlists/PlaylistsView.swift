@@ -44,10 +44,10 @@ struct PlaylistsView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
 
-            Text("Select a Playlist")
+            Text("Select a crate")
                 .font(.headline)
 
-            Text("Choose a playlist from the sidebar to view its contents")
+            Text("Choose a crate from the sidebar to view its contents")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

@@ -54,7 +54,7 @@ struct HomeSidebarView: View {
                 }
             )
         }
-        .alert("Delete crate", isPresented: $showingDeleteConfirmation) {
+        .alert(playlistToDelete?.type == .stations ? String(localized: "Delete Collection") : String(localized: "Delete crate"), isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {
                 playlistToDelete = nil
             }

@@ -28,7 +28,7 @@ Localization changes rename the corresponding authored source keys and English p
 - `xcrun swiftc -frontend -parse` over all 19 changed Swift files: passed. This checks syntax, not a native build or type checking.
 - JSON parsing with duplicate-key rejection: passed; catalog has 825 unique keys versus 828 at baseline.
 - Inspected changed catalog English plural variants and verified carried foreign-language translations match a baseline entry exactly.
-- Reviewed diffs for string-only changes, plus the two music/radio menu-label conditions. Menu action closures/order, keyboard shortcuts, selection handlers and layout modifiers remain unchanged in source.
+- Reviewed diffs for string-only changes, plus the two music/radio menu-label conditions and the pinned-radio delete-title condition. Menu action closures/order, keyboard shortcuts, selection handlers and layout modifiers remain unchanged in source.
 
 No mirror-image unit tests were added for this copy-only task. The integrating primary agent owns the native build after concurrent workers finish.
 

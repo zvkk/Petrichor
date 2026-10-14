@@ -1,6 +1,7 @@
 import Foundation
 import GRDB
 import XCTest
+import Security
 @testable import Petrichor
 
 final class PlaylistSyncTests: XCTestCase {
@@ -425,5 +426,21 @@ extension PlaylistSyncTests {
         let copy = try XCTUnwrap(queued.first { $0.playlistId != removed.playlistId })
         XCTAssertEqual(copy.tracks, edited.tracks)
         XCTAssertEqual(copy.name, "Surviving edit (conflict copy)")
+    }
+}
+
+extension PlaylistSyncTests {
+    func testPresentationCredentialCheckNeverReadsDataOrAllowsAuthenticationUI() {
+        var checks = 0
+        XCTAssertTrue(DropboxSyncVault.hasSavedCredentials { query in
+            checks += 1
+            let attributes = query as! [String: Any]
+            XCTAssertNil(attributes[kSecReturnData as String])
+            XCTAssertEqual(attributes[kSecReturnAttributes as String] as? Bool, true)
+            XCTAssertEqual(attributes[kSecUseAuthenticationUI as String] as? String, kSecUseAuthenticationUIFail as String)
+            return errSecInteractionNotAllowed
+        })
+        XCTAssertEqual(checks, 1)
+        XCTAssertFalse(DropboxSyncVault.hasSavedCredentials { _ in errSecItemNotFound })
     }
 }

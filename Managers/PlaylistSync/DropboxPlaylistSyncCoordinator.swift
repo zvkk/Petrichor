@@ -18,6 +18,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
     private var editObserver: NSObjectProtocol?
     private var scheduled: Task<Void, Never>?
     private var syncAgain = false
+    private var savedConnection: Bool?
     private var db: DatabaseManager? { AppCoordinator.shared?.libraryManager.databaseManager }
     private init() {
         editObserver = NotificationCenter.default.addObserver(forName: .playlistSyncLocalEdit, object: nil, queue: .main) { [weak self] _ in
@@ -29,7 +30,8 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         states = (try? db.syncStates()) ?? []
         let pairing = try? db.syncPairing()
         isPaired = pairing != nil
-        isConnected = ((try? DropboxSyncVault.load()) ?? nil) != nil
+        if savedConnection == nil { savedConnection = DropboxSyncVault.hasSavedCredentials() }
+        isConnected = savedConnection == true
         musicFolder = pairing?.remoteRootPath == "/" ? "Crate App folder" : (pairing?.remoteRootPath ?? "No music folder chosen")
         pairingDetails = pairing.map { "Dropbox folder: \($0.descriptor.musicFolderId)\nLibrary: \($0.descriptor.libraryId)\nLocal folder: \($0.localRootPath)" } ?? "Not paired"
         queuedCrates = Set(((try? db.syncOutbox()) ?? []).compactMap { try? PlaylistRevision.decode($0.1).playlistId })
@@ -48,12 +50,12 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         guard !isWorking else { return }
         isWorking = true
         defer { isWorking = false; refreshStatus() }
-        do { try await authentication.connect(); recovery = nil; status = "Dropbox connected. Pair the matching music folder on both devices." }
+        do { try await authentication.connect(); savedConnection = true; recovery = nil; status = "Dropbox connected. Pair the matching music folder on both devices." }
         catch { status = safeMessage(error) }
     }
     func disconnect() {
         guard !isWorking else { return }
-        do { try DropboxSyncVault.disconnect(); recovery = nil; status = "Dropbox disconnected. Shared crates and pending edits are retained."; refreshStatus() }
+        do { try DropboxSyncVault.disconnect(); savedConnection = false; recovery = nil; status = "Dropbox disconnected. Shared crates and pending edits are retained."; refreshStatus() }
         catch { status = safeMessage(error) }
     }
     func pair(remotePath: String) async {

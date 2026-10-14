@@ -30,7 +30,11 @@ extension PlaybackManager {
 
     /// Rebuilds the mirror with a fresh entry per track.
     func rebuildQueueMirror(for tracks: [Track]) {
-        mirror = tracks.map { MirroredEntry(entryId: .fresh(), track: $0) }
+        mirror = tracks.map {
+            let entryId = AudioEntryId.fresh()
+            registerEntry(entryId, track: $0, purpose: .ordinary)
+            return MirroredEntry(entryId: entryId, track: $0)
+        }
         unmirroredTracks = [:]
         injectedNext = nil
     }
@@ -41,7 +45,7 @@ extension PlaybackManager {
 
     /// The track an entry plays, whether it is a queue member or a lookahead.
     func track(forEntry entryId: AudioEntryId) -> Track? {
-        mirror.first { $0.entryId == entryId }?.track ?? unmirroredTracks[entryId.id]
+        mirror.first { $0.entryId == entryId }?.track ?? unmirroredTracks[entryId.id] ?? entryTracks[entryId]
     }
 
     /// The `currentQueue` position an entry maps to, or nil if it isn't mirrored.
@@ -89,6 +93,7 @@ extension PlaybackManager {
 
         clearInjectedNext()
         let entryId = AudioEntryId.fresh()
+        registerEntry(entryId, track: next.track, purpose: .ordinary)
         injectedNext = InjectedNext(entryId: entryId, track: next.track, standsInFor: next.index)
         unmirroredTracks[entryId.id] = next.track
         audioPlayer.insertNext(QueueEntry(entryId: entryId, url: next.track.url))
@@ -303,6 +308,7 @@ extension PlaybackManager {
     /// track before any queue exists).
     func startOffQueueTrack(_ track: Track, url: URL, resumeAt: Double) {
         let entryId = AudioEntryId.fresh()
+        registerEntry(entryId, track: track, purpose: .ordinary)
         mirror = []
         unmirroredTracks = [entryId.id: track]
         injectedNext = nil
@@ -356,6 +362,7 @@ extension PlaybackManager {
     func queueDidInsert(_ track: Track, at index: Int) {
         guard !mirror.isEmpty else { return }
         let entryId = AudioEntryId.fresh()
+        registerEntry(entryId, track: track, purpose: .ordinary)
         let clamped = min(max(index, 0), mirror.count)
         mirror.insert(MirroredEntry(entryId: entryId, track: track), at: clamped)
 

@@ -121,6 +121,18 @@ class PlaybackManager: NSObject, ObservableObject {
 
     /// Identity of the track currently loaded in the engine.
     var currentEntryId: AudioEntryId?
+    // Tombstones deliberately survive replacement: EOF can arrive after a new load.
+    var entryPurposes: [AudioEntryId: PlaybackPurpose] = [:]
+    var entryTracks: [AudioEntryId: Track] = [:]
+
+    func registerEntry(_ entryId: AudioEntryId, track: Track, purpose: PlaybackPurpose) {
+        entryPurposes[entryId] = purpose
+        entryTracks[entryId] = track
+    }
+
+    func purpose(for entryId: AudioEntryId) -> PlaybackPurpose? { entryPurposes[entryId] }
+    var currentPlaybackPurpose: PlaybackPurpose? { currentEntryId.flatMap { purpose(for: $0) } }
+
     /// One element per `playlistManager.currentQueue` position, same order. Engine
     /// indices are looked up through these, never assumed equal, so an injected
     /// successor can't shift them. Empty while playing something outside the queue.

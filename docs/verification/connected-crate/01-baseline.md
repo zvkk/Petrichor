@@ -5,7 +5,7 @@ Scope authorized: implement connected collection and ordinary crate sync only; s
 | Source | Exact clean implementation base |
 |---|---|
 | Mac | 9523a457a83bfc33cfd7753015d7ed6c5cedbc37; accepted skin e989f59246b0e0668b73ac3530e974be5ca60b3c |
-| Latest phone | 93bb94a; fix/native-glass-transition; clean at start |
+| Latest accepted phone source | 93bb94a; fix/native-glass-transition; clean at start |
 | Read-only sync donor | 4c6567f55cc723727835a69a1fbcbb5ec5ceac12 |
 
 Original Mac worktree has uncommitted later-milestone spec04/05 and six planning documents. They remain untouched; only the selected Plan1 is copied here. Phone native-glass and Digging work through93bb94a is preserved; old sync UI is never substituted.
@@ -26,4 +26,6 @@ Mac DMPlaylists.swift and PMRegularPlaylists.swift already capture manual playli
 
 Baseline source checks and visual captures are recorded separately when performed. No screenshots, live two-device behavior or audible acceptance are claimed by this source receipt. Existing accepted skin checkpoint is reference evidence, not a fresh capture of every requested state. C1–C7 live acceptance remains open until observed on the matching builds with verified data backups.
 
-Independent baseline tests: phone schema suite and Mac PlaylistSyncTests are running; final counts follow in acceptance receipt.
+Independent unchanged-baseline checks: phone schema suite 28/28 passed and Mac PlaylistSyncTests16/16 passed. Full integrated results follow in the acceptance receipt.
+
+Installed-phone distinction: baseline93bb94a contains the accepted footer correction, whose recorded candidate was not yet installed. The prior combined glass/Digging delivery used source6b41f18. This receipt freezes source, not an installed93bb94a binary.

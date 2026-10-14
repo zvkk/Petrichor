@@ -108,7 +108,7 @@ struct PersistentSplitView<Left: View, Center: View, Right: View>: View {
                 left()
                     .frame(width: leftWidth)
                     .frame(maxHeight: .infinity)
-                    .background(.ultraThinMaterial)
+                    .background(CrateStyle.sidebar)
                     .layoutPriority(1)
 
                 SplitDivider(
@@ -122,6 +122,7 @@ struct PersistentSplitView<Left: View, Center: View, Right: View>: View {
 
             // Center content
             center()
+                .background(CrateStyle.paper)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .layoutPriority(0)
 
@@ -206,7 +207,7 @@ private struct SplitDivider: View {
 
     var body: some View {
         Rectangle()
-            .fill(Color(NSColor.separatorColor))
+            .fill(CrateStyle.hairline)
             .frame(width: 1)
             .overlay(
                 Rectangle()

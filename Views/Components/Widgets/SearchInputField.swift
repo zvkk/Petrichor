@@ -27,6 +27,8 @@ struct SearchInputField: NSViewRepresentable {
         searchField.controlSize = fontSize <= 11 ? .mini : .small
         searchField.focusRingType = .default
         searchField.font = .systemFont(ofSize: fontSize)
+        searchField.textColor = NSColor(CrateStyle.ink)
+        searchField.backgroundColor = NSColor(CrateStyle.control)
         searchField.wantsLayer = true
         searchField.layer?.shadowOpacity = 0
         

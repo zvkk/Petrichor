@@ -30,6 +30,9 @@ struct PetrichorApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .tint(CrateStyle.ink)
+                .foregroundStyle(CrateStyle.ink, CrateStyle.secondary)
+                .background(CrateStyle.paper)
                 .environmentObject(appCoordinator.playbackManager)
                 .environmentObject(appCoordinator.libraryManager)
                 .environmentObject(appCoordinator.playlistManager)

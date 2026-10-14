@@ -15,16 +15,16 @@ struct PlayPauseIcon: View {
 
     var body: some View {
         ZStack {
-            Image(systemName: Icons.playFill)
-                .font(.system(size: size, weight: .medium))
-                .foregroundColor(.white)
+            Image(systemName: "play")
+                .font(.system(size: size, weight: .regular))
+                .foregroundColor(CrateStyle.ink)
                 .opacity(isPlaying ? 0 : 1)
                 .scaleEffect(isPlaying ? 0.8 : 1)
                 .rotationEffect(.degrees(isPlaying ? -90 : 0))
 
-            Image(systemName: stopInsteadOfPause ? Icons.stopFill : Icons.pauseFill)
-                .font(.system(size: size, weight: .medium))
-                .foregroundColor(.white)
+            Image(systemName: stopInsteadOfPause ? "stop" : "pause")
+                .font(.system(size: size, weight: .regular))
+                .foregroundColor(CrateStyle.ink)
                 .opacity(isPlaying ? 1 : 0)
                 .scaleEffect(isPlaying ? 1 : 0.8)
                 .rotationEffect(.degrees(isPlaying ? 0 : 90))

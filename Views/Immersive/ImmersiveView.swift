@@ -53,11 +53,11 @@ struct ImmersiveView: View {
     private var colorScheme
 
     @AppStorage("useArtworkColors")
-    private var useArtworkColors = true
+    private var useArtworkColors = false
     @AppStorage("tintPlaybackControls")
-    private var tintPlaybackControls = true
+    private var tintPlaybackControls = false
     @AppStorage("tintNowPlayingBackground")
-    private var tintNowPlayingBackground = true
+    private var tintNowPlayingBackground = false
 
     @AppStorage(immersivePanelStateKey)
     private var panel: ImmersivePanel = .none

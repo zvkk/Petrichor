@@ -17,7 +17,7 @@ private struct NativeProgressConfiguration {
 /// view updates its labels and layers directly from `PlaybackProgressState`.
 struct PlayerProgressBar: NSViewRepresentable {
     let accent: Color
-    var neutral: Color = .secondary
+    var neutral: Color = CrateStyle.secondary
     var scale: CGFloat = 1
     var compactStreamIndicator = false
 
@@ -296,7 +296,7 @@ final class NativePlayerProgressView: NSView {
     private func updateLabelStyle() {
         let fontSize = (compactStreamIndicator ? 10 : 11) * scale
         for label in [elapsedLabel, trailingLabel] {
-            label.font = .monospacedDigitSystemFont(ofSize: fontSize, weight: .medium)
+            label.font = .monospacedDigitSystemFont(ofSize: fontSize, weight: .regular)
             label.textColor = neutral.withAlphaComponent(0.8)
         }
     }
@@ -308,7 +308,9 @@ final class NativePlayerProgressView: NSView {
         fillLayer.backgroundColor = accent.withAlphaComponent(isStream ? 0.45 : 1).cgColor
         bufferingLayer.backgroundColor = accent.withAlphaComponent(0.6).cgColor
         liveDotLayer.backgroundColor = NSColor.systemRed.cgColor
-        thumbLayer.backgroundColor = accent.cgColor
+        thumbLayer.backgroundColor = NSColor(CrateStyle.paper).cgColor
+        thumbLayer.borderColor = accent.cgColor
+        thumbLayer.borderWidth = 1
         CATransaction.commit()
     }
 

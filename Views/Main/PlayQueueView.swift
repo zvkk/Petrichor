@@ -219,7 +219,7 @@ struct PlayQueueRow: View {
         .overlay(
             isLastItem ? nil : Rectangle()
                 .frame(height: 0.5)
-                .foregroundColor(Color.secondary.opacity(0.3))
+                .foregroundColor(CrateStyle.hairline)
                 .padding(.horizontal, 14),
             alignment: .bottom
         )
@@ -238,7 +238,7 @@ struct PlayQueueRow: View {
             if isCurrentTrack {
                 Image(systemName: isPlaying ? Icons.playFill : Icons.pauseFill)
                     .font(.system(size: 12 * scale))
-                    .foregroundColor(.white)
+                    .foregroundColor(CrateStyle.ink)
                     .frame(width: 20 * scale)
             } else {
                 Text("\(position + 1)")
@@ -257,12 +257,12 @@ struct PlayQueueRow: View {
             Text(track.title)
                 .font(.system(size: 13 * scale, weight: isCurrentTrack ? .semibold : .regular))
                 .lineLimit(1)
-                .foregroundColor(isCurrentTrack ? .white : primaryTextColor)
+                .foregroundColor(isCurrentTrack ? CrateStyle.ink : primaryTextColor)
 
             Text(track.displayArtist)
                 .font(.system(size: 11 * scale))
                 .lineLimit(1)
-                .foregroundColor(isCurrentTrack ? .white : secondaryTextColor)
+                .foregroundColor(isCurrentTrack ? CrateStyle.secondary : secondaryTextColor)
         }
     }
 
@@ -270,7 +270,7 @@ struct PlayQueueRow: View {
         HStack(spacing: 5 * scale) {
             Text(HelperUtils.formattedShortDuration(track.duration))
                 .font(.system(size: 11 * scale))
-                .foregroundColor(isCurrentTrack ? .white : secondaryTextColor)
+                .foregroundColor(isCurrentTrack ? CrateStyle.secondary : secondaryTextColor)
                 .monospacedDigit()
 
             if isHovered && !isCurrentTrack {
@@ -295,9 +295,9 @@ struct PlayQueueRow: View {
     private var rowBackground: some View {
         ZStack {
             if isCurrentTrack {
-                accentColor
+                CrateStyle.selection
             } else if isHovered {
-                accentColor.opacity(0.1)
+                CrateStyle.control
             } else {
                 Color.clear
             }

@@ -10,7 +10,7 @@ struct TrackDetailView: View {
     @State private var gradientTask: Task<Void, Never>?
 
     @AppStorage("useArtworkColors")
-    private var useArtworkColors = true
+    private var useArtworkColors = false
 
     @EnvironmentObject var libraryManager: LibraryManager
     @Environment(\.colorScheme)

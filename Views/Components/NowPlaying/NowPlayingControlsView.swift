@@ -10,7 +10,7 @@ import SwiftUI
 import AppKit
 
 struct NowPlayingControlsView: View {
-    /// Fill color for the play/pause button (artwork dominant color from the host).
+    /// Host artwork tint retained for compatibility with the existing player composition.
     let tint: Color
     /// Legible, mode-adjusted color for the active shuffle/repeat states.
     var accent: Color
@@ -29,14 +29,6 @@ struct NowPlayingControlsView: View {
     /// A stream is not part of the queue these act on.
     private var transportDisabled: Bool {
         playbackManager.isTransportDisabled
-    }
-
-    /// A lightened version of the tint, used as the play/pause button's backdrop
-    /// shadow so it reads as a soft glow of the button's own (artwork) color.
-    private var lightenedTint: Color {
-        let base = NSColor(tint).usingColorSpace(.sRGB) ?? NSColor(tint)
-        let lightened = base.blended(withFraction: 0.5, of: .white) ?? base
-        return Color(nsColor: lightened)
     }
 
     var body: some View {
@@ -70,11 +62,11 @@ struct NowPlayingControlsView: View {
         Button(action: {
             playlistManager.playPreviousTrack()
         }, label: {
-            Image(systemName: Icons.backwardFill)
+            Image(systemName: "backward.end")
                 .font(.system(size: 16 * scale, weight: .medium))
                 .foregroundColor(transport)
                 .frame(width: 24 * scale, height: 24 * scale)
-                .shadow(color: lightenedTint.opacity(0.6), radius: 4 * scale, x: 0, y: 1 * scale)
+
         })
         .buttonStyle(ControlButtonStyle())
         .hoverEffect(scale: 1.1)
@@ -91,8 +83,8 @@ struct NowPlayingControlsView: View {
                 .frame(width: 42 * scale, height: 42 * scale)
                 .background(
                     Circle()
-                        .fill(tint)
-                        .shadow(color: lightenedTint.opacity(0.6), radius: 7 * scale, x: 0, y: 2 * scale)
+                        .fill(CrateStyle.paper)
+                        .overlay(Circle().strokeBorder(CrateStyle.ink, lineWidth: 1))
                 )
         })
         .buttonStyle(PlainButtonStyle())
@@ -115,11 +107,11 @@ struct NowPlayingControlsView: View {
         Button(action: {
             playlistManager.playNextTrack()
         }, label: {
-            Image(systemName: Icons.forwardFill)
+            Image(systemName: "forward.end")
                 .font(.system(size: 16 * scale, weight: .medium))
                 .foregroundColor(transport)
                 .frame(width: 24 * scale, height: 24 * scale)
-                .shadow(color: lightenedTint.opacity(0.6), radius: 4 * scale, x: 0, y: 1 * scale)
+
         })
         .buttonStyle(ControlButtonStyle())
         .hoverEffect(scale: 1.1)

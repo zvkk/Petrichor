@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AppearanceTabView: View {
     @AppStorage("colorMode")
-    private var colorMode: ColorMode = .auto
+    private var colorMode: ColorMode = .light
 
     @AppStorage("showFoldersTab")
     private var showFoldersTab = false
@@ -11,16 +11,16 @@ struct AppearanceTabView: View {
     private var showTrackTechnicalInfo = true
 
     @AppStorage("useArtworkColors")
-    private var useArtworkColors = true
+    private var useArtworkColors = false
 
     @AppStorage("playerBarBackgroundStyle")
     private var playerBarBackgroundStyle: PlayerBarBackgroundStyle = .fullWidth
 
     @AppStorage("tintPlaybackControls")
-    private var tintPlaybackControls = true
+    private var tintPlaybackControls = false
 
     @AppStorage("tintNowPlayingBackground")
-    private var tintNowPlayingBackground = true
+    private var tintNowPlayingBackground = false
 
     @AppStorage("miniPlayerAlwaysOnTop")
     private var miniPlayerAlwaysOnTop = false

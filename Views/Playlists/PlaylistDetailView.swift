@@ -16,7 +16,7 @@ struct PlaylistDetailView: View {
     @State private var isArtworkHovered = false
 
     @AppStorage("useArtworkColors")
-    private var useArtworkColors = true
+    private var useArtworkColors = false
 
     @AppStorage("trackTableRowSize")
     private var trackTableRowSize: TableRowSize = .expanded
@@ -51,7 +51,7 @@ struct PlaylistDetailView: View {
         content
             // Opaque, matching EntityDetailView. Required because Home presents this as a
             // full-screen ZStack overlay; without it, whatever sits behind shows through.
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(CrateStyle.paper)
     }
 
     @ViewBuilder private var content: some View {
@@ -174,10 +174,10 @@ struct PlaylistDetailView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: 120, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                    .clipShape(RoundedRectangle(cornerRadius: CrateStyle.artworkRadius))
+
             } else {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: CrateStyle.artworkRadius)
                     .fill(Color.secondary.opacity(0.2))
                     .frame(width: 120, height: 120)
                     .overlay(
@@ -187,14 +187,14 @@ struct PlaylistDetailView: View {
                     )
             }
         }
-        .contentShape(RoundedRectangle(cornerRadius: 8))
+        .contentShape(RoundedRectangle(cornerRadius: CrateStyle.artworkRadius))
         .onTapGesture {
             guard playlist?.isUserEditable == true else { return }
             showingArtworkEditor = true
         }
         .overlay {
             if playlist?.isUserEditable == true {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: CrateStyle.artworkRadius)
                     .fill(Color.black.opacity(0.4))
                     .frame(width: 120, height: 120)
                     .overlay(
@@ -222,8 +222,7 @@ struct PlaylistDetailView: View {
                 .fontWeight(.medium)
 
             Text(playlist.map(DefaultPlaylists.displayName) ?? "")
-                .font(.title)
-                .fontWeight(.bold)
+                .font(.system(size: 25, weight: .medium))
                 .lineLimit(2)
 
             if let playlist = playlist {

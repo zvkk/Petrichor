@@ -34,7 +34,7 @@ struct EntityDetailView: View {
     }
 
     @AppStorage("useArtworkColors")
-    private var useArtworkColors = true
+    private var useArtworkColors = false
 
     @AppStorage("trackTableRowSize")
     private var trackTableRowSize: TableRowSize = .expanded
@@ -78,7 +78,7 @@ struct EntityDetailView: View {
                 )
             }
         }
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(CrateStyle.paper)
         .onAppear {
             loadTracks()
             updateGradientColors()
@@ -201,10 +201,10 @@ struct EntityDetailView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: 120, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                    .clipShape(RoundedRectangle(cornerRadius: CrateStyle.artworkRadius))
+
             } else {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: CrateStyle.artworkRadius)
                     .fill(Color.secondary.opacity(0.2))
                     .frame(width: 120, height: 120)
                     .overlay(
@@ -236,7 +236,7 @@ struct EntityDetailView: View {
         }
         .overlay {
             if isPersonEntity {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: CrateStyle.artworkRadius)
                     .fill(Color.black.opacity(0.4))
                     .frame(width: 120, height: 120)
                     .overlay(
@@ -296,8 +296,7 @@ struct EntityDetailView: View {
                 .fontWeight(.medium)
 
             Text(entity.name)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 25, weight: .medium))
                 .lineLimit(2)
 
             if let bio = artistBio, !bio.isEmpty {
@@ -317,8 +316,7 @@ struct EntityDetailView: View {
 
         return VStack(alignment: .leading, spacing: 4) {
             Text(entity.name)
-                .font(.title)
-                .fontWeight(.bold)
+                .font(.system(size: 25, weight: .medium))
                 .lineLimit(2)
 
             if let artistName = albumEntity?.artistName, !artistName.isEmpty {

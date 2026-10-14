@@ -247,7 +247,7 @@ struct HomeSidebarView: View {
                 }, label: {
                     Image(systemName: "pin.fill")
                         .font(.system(size: 11))
-                        .foregroundColor(selectedItem?.id == item.id ? .white.opacity(0.8) : .secondary)
+                        .foregroundColor(CrateStyle.secondary)
                 })
                 .buttonStyle(.plain)
                 .help("Remove from Home")

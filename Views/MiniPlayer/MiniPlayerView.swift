@@ -65,11 +65,11 @@ struct MiniPlayerView: View {
     @AppStorage("miniPlayerAlwaysOnTop")
     private var miniPlayerAlwaysOnTop = false
     @AppStorage("useArtworkColors")
-    private var useArtworkColors = true
+    private var useArtworkColors = false
     @AppStorage("tintPlaybackControls")
-    private var tintPlaybackControls = true
+    private var tintPlaybackControls = false
     @AppStorage("tintNowPlayingBackground")
-    private var tintNowPlayingBackground = true
+    private var tintNowPlayingBackground = false
     // Persisted independently from the main window's queue/lyrics state so the
     // mini player remembers its own panel across relaunches.
     @AppStorage(miniPlayerPanelStateKey)

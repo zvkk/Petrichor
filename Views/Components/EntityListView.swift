@@ -186,8 +186,8 @@ struct EntityListHeader<Accessory: View>: View {
     var body: some View {
         HStack(spacing: 8) {
             Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.primary)
+                .font(CrateStyle.itemTitle)
+                .foregroundStyle(CrateStyle.ink)
 
             Spacer()
 
@@ -196,7 +196,7 @@ struct EntityListHeader<Accessory: View>: View {
         .padding(.horizontal, 14)
         .frame(height: metrics.headerHeight)
         .frame(maxWidth: .infinity)
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(CrateStyle.paper)
     }
 }
 
@@ -320,7 +320,7 @@ struct EntityListRow: View {
         } label: {
             Image(systemName: isLeading ? Icons.chevronLeft : Icons.chevronRight)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(CrateStyle.ink)
                 .frame(width: 26, height: 26)
                 .background(.regularMaterial, in: Circle())
                 .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
@@ -459,7 +459,7 @@ private struct EntityListItem: View {
             .padding(metrics.tilePadding)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isHovered ? Color(NSColor.selectedContentBackgroundColor).opacity(0.15) : Color.clear)
+                    .fill(isHovered ? CrateStyle.control : Color.clear)
                     .animation(.easeInOut(duration: 0.08), value: isHovered)
             )
             .contentShape(Rectangle())
@@ -479,14 +479,14 @@ private struct EntityListItem: View {
                     .resizable()
                     .interpolation(.high)
             } else {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: CrateStyle.artworkRadius)
                     .fill(Color.gray.opacity(0.2))
                     .overlay(placeholderGlyph)
             }
         }
         .frame(width: metrics.artworkSize, height: metrics.artworkSize)
         // Softer than the grid's radius-10/y-5: the row clips at its vertical bounds.
-        .shadow(color: .black.opacity(0.18), radius: 6, x: 0, y: 3)
+
         // Scheme-qualified: procedural artwork has a light and a dark variant.
         .task(id: "\(entity.artworkIdentity)-\(colorScheme)") {
             await loadArtwork()
@@ -509,13 +509,13 @@ private struct EntityListItem: View {
     private var labels: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(entity.displayName)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.primary)
+                .font(CrateStyle.itemTitle)
+                .foregroundStyle(CrateStyle.ink)
                 .lineLimit(1)
 
             if metrics.showsSubtitleLine {
                 Text(secondaryLine)
-                    .font(.system(size: 11))
+                    .font(CrateStyle.metadata)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }

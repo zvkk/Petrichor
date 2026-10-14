@@ -151,8 +151,6 @@ struct PlaylistSidebarView: View {
     private func kebabMenu(for item: PlaylistSidebarItem) -> AnyView {
         guard item.playlist.isUserEditable else { return AnyView(EmptyView()) }
 
-        let isSelected = selectedSidebarItem?.id == item.id
-
         return AnyView(
             Menu {
                 // Same items as the right-click context menu.
@@ -162,7 +160,7 @@ struct PlaylistSidebarView: View {
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 11))
-                    .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                    .foregroundColor(CrateStyle.secondary)
                     .imageScale(.large)
                     .frame(width: 16, height: 16)
             }

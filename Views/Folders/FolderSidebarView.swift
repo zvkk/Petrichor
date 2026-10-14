@@ -176,7 +176,7 @@ private struct FolderNodeRow: View {
 
                     // Icon
                     Image(systemName: folderIcon)
-                        .foregroundColor(isSelected ? .white : .secondary)
+                        .foregroundColor(CrateStyle.secondary)
                         .font(.system(size: 16))
                         .frame(width: 16, height: 16)
 
@@ -185,14 +185,14 @@ private struct FolderNodeRow: View {
                         Text(node.name)
                             .font(.system(size: 13, weight: isSelected ? .medium : .regular))
                             .lineLimit(1)
-                            .foregroundColor(isSelected ? .white : .primary)
+                            .foregroundColor(CrateStyle.ink)
                             .truncationMode(.tail)
                             .help(node.name)
 
                         if let subtitle {
                             Text(subtitle)
                                 .font(.system(size: 11))
-                                .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                                .foregroundColor(CrateStyle.secondary)
                                 .lineLimit(1)
                         }
                     }
@@ -251,9 +251,9 @@ private struct FolderNodeRow: View {
 
     private var backgroundColor: Color {
         if isSelected {
-            return Color.accentColor
+            return CrateStyle.selection
         } else if isHovered {
-            return Color(NSColor.selectedContentBackgroundColor).opacity(0.15)
+            return CrateStyle.control
         } else {
             return Color.clear
         }

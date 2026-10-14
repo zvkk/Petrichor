@@ -140,7 +140,7 @@ final class EntityArtworkCache: @unchecked Sendable {
         ) else { return nil }
 
         let drawRect = CGRect(x: 0, y: 0, width: pixelSize, height: pixelSize)
-        let cornerRadius: CGFloat = 8 * scale
+        let cornerRadius = CrateStyle.artworkRadius * scale
         let path = CGPath(roundedRect: drawRect, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
         context.addPath(path)
         context.clip()
@@ -173,10 +173,10 @@ private struct EntityGridItem<T: Entity>: View {
                         .resizable()
                         .interpolation(.high)
                         .frame(width: ViewDefaults.gridArtworkSize, height: ViewDefaults.gridArtworkSize)
-                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+
                 } else {
                     Rectangle()
-                        .fill(Color.gray.opacity(0.2))
+                        .fill(CrateStyle.control)
                         .frame(width: ViewDefaults.gridArtworkSize, height: ViewDefaults.gridArtworkSize)
                         .overlay(
                             Group {
@@ -192,8 +192,8 @@ private struct EntityGridItem<T: Entity>: View {
                                 }
                             }
                         )
-                        .cornerRadius(8)
-                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                        .cornerRadius(CrateStyle.artworkRadius)
+
                 }
             }
             .task(id: artworkTaskID) {
@@ -202,39 +202,39 @@ private struct EntityGridItem<T: Entity>: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(entity.displayName)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(CrateStyle.itemTitle)
                     .lineLimit(1)
-                    .foregroundColor(.primary)
+                    .foregroundColor(CrateStyle.ink)
                     .help(entity.displayName)
 
                 if let albumEntity = entity as? AlbumEntity {
                     if let artistName = albumEntity.artistName {
                         Text(artistName)
-                            .font(.system(size: 11))
-                            .foregroundColor(.primary)
+                            .font(CrateStyle.metadata)
+                            .foregroundColor(CrateStyle.secondary)
                             .lineLimit(1)
                             .help(artistName)
                     }
                     
                     if let year = albumEntity.year {
                         Text(year)
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
+                            .font(CrateStyle.metadata)
+                            .foregroundColor(CrateStyle.secondary)
                             .lineLimit(1)
                             .help(year)
                     }
                 } else if let subtitle = entity.subtitle {
                     Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .font(CrateStyle.metadata)
+                        .foregroundColor(CrateStyle.secondary)
                         .lineLimit(1)
                         .help(subtitle)
                 }
 
                 if entity is AlbumEntity {
                     Text("\(entity.trackCount) songs")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                        .font(CrateStyle.metadata)
+                        .foregroundColor(CrateStyle.secondary)
                         .lineLimit(1)
                 }
             }
@@ -243,7 +243,7 @@ private struct EntityGridItem<T: Entity>: View {
         .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(isHovered ? Color(NSColor.selectedContentBackgroundColor).opacity(0.15) : Color.clear)
+                .fill(isHovered ? CrateStyle.control : Color.clear)
                 .animation(.easeInOut(duration: 0.08), value: isHovered)
         )
         .contentShape(Rectangle())

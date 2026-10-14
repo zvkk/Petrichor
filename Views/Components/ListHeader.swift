@@ -18,7 +18,7 @@ struct ListHeaderStyle: ViewModifier {
             .padding(padding)
             .frame(maxWidth: .infinity)
             .frame(height: height)
-            .background(opaque ? Color(NSColor.controlBackgroundColor) : Color(NSColor.clear))
+            .background(opaque ? CrateStyle.paper : Color.clear)
     }
 }
 
@@ -293,7 +293,7 @@ struct TrackListHeader<Trailing: View>: View {
 struct HeaderTitleStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.headline)
+            .font(.system(size: 14, weight: .medium))
     }
 }
 
@@ -301,7 +301,7 @@ struct HeaderSubtitleStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(CrateStyle.secondary)
     }
 }
 

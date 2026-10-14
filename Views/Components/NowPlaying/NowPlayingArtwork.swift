@@ -69,8 +69,8 @@ enum NowPlayingArtwork {
     /// accent color when tinting is disabled or artwork colors are unavailable.
     static func tint(for source: NowPlayingSource?, useArtworkTint: Bool) -> Color {
         guard useArtworkTint, let dominant = source?.dominantColors.first else {
-            // Use the system accent (the empty AccentColor asset means Color.accentColor won't track it).
-            return Color(nsColor: .controlAccentColor)
+            // The neutral skin uses ink when artwork tint is disabled.
+            return CrateStyle.ink
         }
         return Color(nsColor: dominant)
     }
@@ -85,8 +85,8 @@ enum NowPlayingArtwork {
     ///   dark mode); when `false` it is deepened for light surfaces (the player bar
     ///   in light mode).
     static func controlColor(for source: NowPlayingSource?, useArtworkTint: Bool, isDarkBackground: Bool) -> Color {
-        // Tinting off: use the system accent (the empty AccentColor asset means Color.accentColor won't track it).
-        guard useArtworkTint else { return Color(nsColor: .controlAccentColor) }
+        // Tinting off: use the neutral skin ink.
+        guard useArtworkTint else { return CrateStyle.ink }
         // Tinting on but nothing playing: transport controls use the primary label color.
         guard let dominant = source?.dominantColors.first else { return .primary }
 

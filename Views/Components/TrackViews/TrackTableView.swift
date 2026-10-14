@@ -778,9 +778,9 @@ private struct TrackTitleCell: View {
                             .resizable()
                             .scaledToFill()
                             .frame(width: ViewDefaults.listArtworkSize, height: ViewDefaults.listArtworkSize)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .clipShape(RoundedRectangle(cornerRadius: CrateStyle.artworkRadius))
                     } else {
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: CrateStyle.artworkRadius)
                             .fill(Color.gray.opacity(0.2))
                             .frame(width: ViewDefaults.listArtworkSize, height: ViewDefaults.listArtworkSize)
                             .overlay(
@@ -791,7 +791,7 @@ private struct TrackTitleCell: View {
                     }
 
                     if isCurrentTrack || isSelected {
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: CrateStyle.artworkRadius)
                             .fill(Color.black.opacity(0.5))
                             .frame(width: ViewDefaults.listArtworkSize, height: ViewDefaults.listArtworkSize)
 

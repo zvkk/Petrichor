@@ -55,13 +55,13 @@ struct PlayerView: View {
     var colorScheme
 
     @AppStorage("useArtworkColors")
-    private var useArtworkColors = true
+    private var useArtworkColors = false
 
     @AppStorage("showTrackTechnicalInfo")
     private var showTrackTechnicalInfo = true
 
     @AppStorage("tintPlaybackControls")
-    private var tintPlaybackControls = true
+    private var tintPlaybackControls = false
 
     @AppStorage("playerBarBackgroundStyle")
     private var playerBarBackgroundStyle: PlayerBarBackgroundStyle = .fullWidth
@@ -233,7 +233,7 @@ struct PlayerView: View {
         Button(action: {
             playlistManager.playPreviousTrack()
         }, label: {
-            Image(systemName: Icons.backwardFill)
+            Image(systemName: "backward.end")
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(controlsTinted ? controlAccent : .primary)
                 .frame(width: 32, height: 32)
@@ -257,8 +257,8 @@ struct PlayerView: View {
                 .frame(width: 42, height: 42)
                 .background(
                     Circle()
-                        .fill(controlTint)
-                        .shadow(color: controlTint.opacity(0.3), radius: 6, x: 0, y: 3)
+                        .fill(CrateStyle.paper)
+                        .overlay(Circle().strokeBorder(CrateStyle.ink, lineWidth: 1))
                 )
         })
         .buttonStyle(PlainButtonStyle())
@@ -282,7 +282,7 @@ struct PlayerView: View {
         Button(action: {
             playlistManager.playNextTrack()
         }, label: {
-            Image(systemName: Icons.forwardFill)
+            Image(systemName: "forward.end")
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(controlsTinted ? controlAccent : .primary)
                 .frame(width: 32, height: 32)
@@ -385,11 +385,11 @@ struct PlayerView: View {
         }, label: {
             Image(systemName: Icons.queueList)
                 .font(.system(size: 16))
-                .foregroundColor(rightSidebarContent == .queue ? .white : .secondary)
+                .foregroundColor(rightSidebarContent == .queue ? CrateStyle.ink : CrateStyle.secondary)
                 .frame(width: 32, height: 32)
                 .background(
                     Circle()
-                        .fill(rightSidebarContent == .queue ? controlTint : Color.secondary.opacity(0.1))
+                        .fill(rightSidebarContent == .queue ? CrateStyle.selection : Color.clear)
                 )
         })
         .buttonStyle(PlainButtonStyle())
@@ -408,7 +408,7 @@ struct PlayerView: View {
                 .frame(width: 32, height: 32)
                 .background(
                     Circle()
-                        .fill(Color.secondary.opacity(0.1))
+                        .fill(Color.clear)
                 )
         })
         .buttonStyle(PlainButtonStyle())
@@ -428,7 +428,7 @@ struct PlayerView: View {
                 .frame(width: 32, height: 32)
                 .background(
                     Circle()
-                        .fill(Color.secondary.opacity(0.1))
+                        .fill(Color.clear)
                 )
         })
         .buttonStyle(PlainButtonStyle())
@@ -443,11 +443,11 @@ struct PlayerView: View {
             rightSidebarContent = rightSidebarContent == .lyrics ? .none : .lyrics
         }, label: {
             Image(Icons.customLyrics)
-                .foregroundColor(rightSidebarContent == .lyrics ? .white : .secondary)
+                .foregroundColor(rightSidebarContent == .lyrics ? CrateStyle.ink : CrateStyle.secondary)
                 .frame(width: 32, height: 32)
                 .background(
                     Circle()
-                        .fill(rightSidebarContent == .lyrics ? controlTint : Color.secondary.opacity(0.1))
+                        .fill(rightSidebarContent == .lyrics ? CrateStyle.selection : Color.clear)
                 )
         })
         .buttonStyle(PlainButtonStyle())
@@ -488,7 +488,7 @@ struct PlayerView: View {
 
     private var volumeAccent: Color {
         playbackManager.nowPlayingSource == nil
-            ? Color(nsColor: .controlAccentColor)
+            ? CrateStyle.ink
             : controlAccent
     }
 
@@ -578,7 +578,7 @@ struct PlayerTrackDetailsView: View, Equatable {
                 Text(track?.title ?? "")
                     .font(.system(size: titleFontSize, weight: .medium))
                     .lineLimit(1)
-                    .foregroundColor(.primary)
+                    .foregroundColor(CrateStyle.ink)
                     .truncationMode(.tail)
                     .help(track?.title ?? "")
                     .contextMenu {
@@ -741,12 +741,7 @@ struct AlbumArtworkImage: View {
             AlbumArtworkContent(artworkData: artworkData, placeholderIcon: placeholderIcon)
         }
         .frame(width: 76, height: 76)
-        .shadow(
-            color: .black.opacity(hovering ? 0.4 : 0.2),
-            radius: hovering ? 6 : 2,
-            x: 0,
-            y: hovering ? 3 : 1
-        )
+
         .scaleEffect(hovering ? 1.05 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: hovering)
         .contentShape(Rectangle())
@@ -768,9 +763,9 @@ struct AlbumArtworkContent: View {
                 .resizable()
                 .scaledToFill()
                 .frame(width: 76, height: 76)
-                .clipShape(RoundedRectangle(cornerRadius: 5))
+                .clipShape(RoundedRectangle(cornerRadius: CrateStyle.artworkRadius))
         } else {
-            RoundedRectangle(cornerRadius: 5)
+            RoundedRectangle(cornerRadius: CrateStyle.artworkRadius)
                 .fill(Color.secondary.opacity(0.15))
                 .overlay(
                     Image(systemName: placeholderIcon)

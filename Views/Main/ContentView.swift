@@ -46,9 +46,9 @@ struct ContentView: View {
     @AppStorage("showFoldersTab")
     private var showFoldersTab = false
     @AppStorage("useArtworkColors")
-    private var useArtworkColors = true
+    private var useArtworkColors = false
     @AppStorage("tintNowPlayingBackground")
-    private var tintNowPlayingBackground = true
+    private var tintNowPlayingBackground = false
     @Environment(\.colorScheme)
     private var colorScheme
 
@@ -409,7 +409,7 @@ struct ContentView: View {
                 get: { rightSidebarContent == .queue },
                 set: { if !$0 { rightSidebarContent = .none } }
             ))
-            .background(.ultraThinMaterial)
+            .background(CrateStyle.paper)
         case .trackDetail(let track):
             TrackDetailView(track: track) {
                 rightSidebarContent = .none
@@ -418,7 +418,7 @@ struct ContentView: View {
             TrackLyricsView {
                 rightSidebarContent = .none
             }
-            .background(.ultraThinMaterial)
+            .background(CrateStyle.paper)
         case .none:
             EmptyView()
         }
@@ -430,8 +430,10 @@ struct ContentView: View {
                 rightSidebarContent: $rightSidebarContent
             )
             .frame(height: 110)
-            .background(.windowBackground)
-            .shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: -4)
+            .background(CrateStyle.paper)
+            .overlay(alignment: .top) {
+                CrateStyle.hairline.frame(height: 1)
+            }
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }

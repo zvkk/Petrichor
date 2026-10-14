@@ -76,7 +76,7 @@ struct SidebarItemRow<Item: SidebarItem>: View {
                     Image(systemName: icon)
                 }
             }
-            .foregroundColor(isSelected ? .white : iconColor)
+            .foregroundColor(isSelected ? CrateStyle.ink : iconColor)
             .font(.system(size: 16))
             .frame(width: 16, height: 16)
         }
@@ -118,7 +118,7 @@ struct SidebarItemRow<Item: SidebarItem>: View {
             .font(.system(size: 13, weight: isSelected ? .medium : .regular))
             .italic(isUnknownItem)
             .lineLimit(1)
-            .foregroundColor(isSelected ? .white : .primary)
+            .foregroundColor(CrateStyle.ink)
             .help(isTitleTruncated ? displayTitle : "")
             .background(truncationDetector(for: displayTitle, isTruncated: $isTitleTruncated))
     }
@@ -142,7 +142,7 @@ struct SidebarItemRow<Item: SidebarItem>: View {
     private func subtitleView(subtitle: String) -> some View {
         Text(subtitle)
             .font(.system(size: 11))
-            .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+            .foregroundColor(CrateStyle.secondary)
             .lineLimit(1)
             .help(isSubtitleTruncated ? subtitle : "")
             .background(truncationDetector(for: subtitle, isTruncated: $isSubtitleTruncated, fontSize: 11))
@@ -193,9 +193,9 @@ struct SidebarItemRow<Item: SidebarItem>: View {
 
     private var backgroundColor: Color {
         if isSelected {
-            return Color.accentColor
+            return CrateStyle.selection
         } else if isHovered {
-            return Color.accentColor.opacity(0.1)
+            return CrateStyle.control
         } else {
             return Color.clear
         }

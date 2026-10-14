@@ -94,8 +94,8 @@ struct TabbedButtons<Item: TabbedItem>: View {
             ZStack {
                 if style != .modern {
                     // Container background
-                    RoundedRectangle(cornerRadius: style == .moderncompact ? 16 : 8)
-                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(CrateStyle.control)
                 }
 
                 // Moving background for transform animation
@@ -114,8 +114,8 @@ struct TabbedButtons<Item: TabbedItem>: View {
                 let buttonWidth = totalWidth / CGFloat(items.count)
                 let xOffset = CGFloat(selectedIndex) * buttonWidth + 4 // Account for padding
 
-                RoundedRectangle(cornerRadius: style.backgroundViewRadius ?? 8)
-                    .fill(Color.accentColor)
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(CrateStyle.selection)
                     .frame(
                         width: buttonWidth - 1, // Account for spacing
                         height: geometry.size.height - 8 // Account for padding
@@ -195,7 +195,7 @@ private struct TabbedButton<Item: TabbedItem>: View {
             )
             .padding(.vertical, style.buttonHeight == nil ? style.verticalPadding : 0)
             .background(backgroundView)
-            .contentShape(RoundedRectangle(cornerRadius: style.contentShapeRadius ?? 6))
+            .contentShape(RoundedRectangle(cornerRadius: 7))
         })
         .buttonStyle(.plain)
         .disabled(isDisabled)
@@ -223,7 +223,7 @@ private struct TabbedButton<Item: TabbedItem>: View {
         if animation == .transform {
             // For transform animation, delay white text until background is in position
             if isSelected {
-                return AnyShapeStyle(Color.white)
+                return AnyShapeStyle(CrateStyle.ink)
             } else if isHovered {
                 return AnyShapeStyle(Color.primary)
             } else {
@@ -232,7 +232,7 @@ private struct TabbedButton<Item: TabbedItem>: View {
         } else {
             // Original fade animation behavior
             if isSelected {
-                return AnyShapeStyle(Color.white)
+                return AnyShapeStyle(CrateStyle.ink)
             } else if isHovered {
                 return AnyShapeStyle(Color.primary)
             } else {
@@ -245,7 +245,7 @@ private struct TabbedButton<Item: TabbedItem>: View {
         if animation == .transform {
             // For transform animation, delay white text until background is in position
             if isSelected {
-                return .white
+                return CrateStyle.ink
             } else if isHovered {
                 return .primary
             } else {
@@ -254,7 +254,7 @@ private struct TabbedButton<Item: TabbedItem>: View {
         } else {
             // Original fade animation behavior
             if isSelected {
-                return .white
+                return CrateStyle.ink
             } else if isHovered {
                 return .primary
             } else {
@@ -266,19 +266,19 @@ private struct TabbedButton<Item: TabbedItem>: View {
     @ViewBuilder private var backgroundView: some View {
         if animation == .fade {
             // Original fade animation
-            RoundedRectangle(cornerRadius: style.backgroundViewRadius ?? 6)
+            RoundedRectangle(cornerRadius: 7)
                 .fill(
-                    isSelected ? Color.accentColor :
-                        isHovered ? Color.primary.opacity(0.06) :
+                    isSelected ? CrateStyle.selection :
+                        isHovered ? CrateStyle.control :
                         Color.clear
                 )
                 .animation(.easeOut(duration: AnimationConstants.fadeDuration), value: isSelected)
                 .animation(.easeOut(duration: AnimationConstants.hoverDuration), value: isHovered)
         } else {
             // Transform animation - no individual background, uses moving background
-            RoundedRectangle(cornerRadius: style.backgroundViewRadius ?? 6)
+            RoundedRectangle(cornerRadius: 7)
                 .fill(
-                    isHovered && !isSelected ? Color.primary.opacity(0.06) : Color.clear
+                    isHovered && !isSelected ? CrateStyle.control : Color.clear
                 )
                 .animation(.easeOut(duration: AnimationConstants.hoverDuration), value: isHovered)
         }

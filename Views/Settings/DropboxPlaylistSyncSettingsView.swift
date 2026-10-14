@@ -6,7 +6,7 @@ struct DropboxPlaylistSyncSettingsView: View {
     var body: some View {
         Section {
             Text(sync.musicFolder).textSelection(.enabled)
-            Text(sync.isConnected ? (sync.isPaired ? "Dropbox connected" : "Choose your shared music folder") : "Dropbox disconnected")
+            Text(sync.isConnected ? (sync.isPaired ? String(localized: "Dropbox connected") : String(localized: "Choose your shared music folder")) : String(localized: "Dropbox disconnected"))
                 .font(.caption).foregroundStyle(.secondary)
             HStack {
                 Button("Connect Dropbox") { Task { await sync.connect() } }
@@ -18,7 +18,7 @@ struct DropboxPlaylistSyncSettingsView: View {
             Text(sync.status).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             ForEach(sync.states, id: \.localID) { state in
                 HStack {
-                    Text(AppCoordinator.shared?.playlistManager.playlists.first { $0.id == state.localID }?.name ?? state.intent?.name ?? "Shared crate")
+                    Text(AppCoordinator.shared?.playlistManager.playlists.first { $0.id == state.localID }?.name ?? state.intent?.name ?? String(localized: "Shared crate"))
                     Spacer()
                     SharedCrateStatusButton(playlistID: state.localID)
                 }.font(.caption)
@@ -85,14 +85,14 @@ private struct SharedCrateDetails: View {
                 DisclosureGroup("Details") {
                     Text("Shared crate: \(state.sharedID)")
                     ForEach(Array(members.enumerated()), id: \.offset) { position, member in
-                        Text("\(position + 1). \(member.fileId ?? "Local recording")")
+                        Text("\(position + 1). \(member.fileId ?? String(localized: "Local recording"))")
                     }
                 }.font(.caption).textSelection(.enabled)
             }
             Text(sync.status).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             HStack {
                 if !sync.isConnected || !sync.isPaired || sync.recovery != nil {
-                    Button(sync.recovery ?? (sync.isConnected ? "Check music folder" : "Connect Dropbox")) { dismiss(); sync.openConnectionSettings() }
+                    Button(sync.recovery ?? (sync.isConnected ? String(localized: "Check music folder") : String(localized: "Connect Dropbox"))) { dismiss(); sync.openConnectionSettings() }
                 } else if let state {
                     if state.issue == "conflict" {
                         Button("Review changes…") { sync.resolve(state) }.disabled(sync.isWorking)

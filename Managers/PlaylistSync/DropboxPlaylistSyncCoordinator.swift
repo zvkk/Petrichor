@@ -5,12 +5,12 @@ import GRDB
 @MainActor
 final class DropboxPlaylistSyncCoordinator: ObservableObject {
     static let shared = DropboxPlaylistSyncCoordinator()
-    @Published var status = "Connect Dropbox to share playlists with iPhone."
+    @Published var status = String(localized: "Connect Dropbox to share playlists with iPhone.")
     @Published var isWorking = false
     @Published var states: [SyncPlaylistState] = []
     @Published var isPaired = false
     @Published var isConnected = false
-    @Published var musicFolder = "No music folder chosen"
+    @Published var musicFolder = String(localized: "No music folder chosen")
     @Published var queuedCrates: Set<String> = []
     @Published var recovery: String?
     @Published var pairingDetails = ""
@@ -32,8 +32,8 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         isPaired = pairing != nil
         if savedConnection == nil { savedConnection = DropboxSyncVault.hasSavedCredentials() }
         isConnected = savedConnection == true
-        musicFolder = pairing?.remoteRootPath == "/" ? "Crate App folder" : (pairing?.remoteRootPath ?? "No music folder chosen")
-        pairingDetails = pairing.map { "Dropbox folder: \($0.descriptor.musicFolderId)\nLibrary: \($0.descriptor.libraryId)\nLocal folder: \($0.localRootPath)" } ?? "Not paired"
+        musicFolder = pairing?.remoteRootPath == "/" ? String(localized: "Crate App folder") : (pairing?.remoteRootPath ?? String(localized: "No music folder chosen"))
+        pairingDetails = pairing.map { String(localized: "Dropbox folder: \($0.descriptor.musicFolderId)\nLibrary: \($0.descriptor.libraryId)\nLocal folder: \($0.localRootPath)") } ?? String(localized: "Not paired")
         queuedCrates = Set(((try? db.syncOutbox()) ?? []).compactMap { try? PlaylistRevision.decode($0.1).playlistId })
     }
     func scheduleSync() {
@@ -50,12 +50,12 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         guard !isWorking else { return }
         isWorking = true
         defer { isWorking = false; refreshStatus() }
-        do { try await authentication.connect(); savedConnection = true; recovery = nil; status = "Dropbox connected. Pair the matching music folder on both devices." }
+        do { try await authentication.connect(); savedConnection = true; recovery = nil; status = String(localized: "Dropbox connected. Pair the matching music folder on both devices.") }
         catch { status = safeMessage(error) }
     }
     func disconnect() {
         guard !isWorking else { return }
-        do { try DropboxSyncVault.disconnect(); savedConnection = false; recovery = nil; status = "Dropbox disconnected. Shared crates and pending edits are retained."; refreshStatus() }
+        do { try DropboxSyncVault.disconnect(); savedConnection = false; recovery = nil; status = String(localized: "Dropbox disconnected. Shared crates and pending edits are retained."); refreshStatus() }
         catch { status = safeMessage(error) }
     }
     func pair(remotePath: String) async {
@@ -63,7 +63,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
         let input = remotePath.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !input.isEmpty, input.hasPrefix("/") || input.hasPrefix("id:") else { status = PlaylistSyncError.configuration.localizedDescription; return }
         let panel = NSOpenPanel()
-        panel.title = "Choose the local folder matching your Dropbox music folder"
+        panel.title = String(localized: "Choose the local folder matching your Dropbox music folder")
         panel.canChooseDirectories = true; panel.canChooseFiles = false; panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let root = panel.url else { return }
         isWorking = true
@@ -106,7 +106,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             try db.saveSyncPairing(SyncPairing(descriptor: descriptor, localRootBookmark: bookmark,
                 localRootPath: root.standardizedFileURL.resolvingSymlinksInPath().path, remoteRootPath: remoteRoot))
             recovery = nil
-            status = "Music folder paired. Share a crate from its options menu."
+            status = String(localized: "Music folder paired. Share a crate from its options menu.")
         } catch { status = safeMessage(error) }
     }
     static func pairingDescriptor(existing: SyncPairing?, accountID: String, namespace: String, folderID: String, localRoot: String) throws -> SyncLibraryDescriptor {
@@ -119,19 +119,19 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
     }
     func share(_ playlist: Playlist) {
         guard playlist.type == .regular, playlist.isUserEditable, playlist.isContentEditable, let db else { return }
-        do { try db.sharePlaylist(playlist.id); status = "Crate selected for sharing."; scheduleSync() }
+        do { try db.sharePlaylist(playlist.id); status = String(localized: "Crate selected for sharing."); scheduleSync() }
         catch { status = safeMessage(error) }
         refreshStatus()
     }
     private func safeMessage(_ error: Error) -> String {
         if let failure = error as? PlaylistSyncError {
             switch failure {
-            case .authentication, .writePermission: recovery = "Reconnect Dropbox"
-            case .pairingChanged, .notPaired, .configuration: recovery = "Check music folder"
+            case .authentication, .writePermission: recovery = String(localized: "Reconnect Dropbox")
+            case .pairingChanged, .notPaired, .configuration: recovery = String(localized: "Check music folder")
             default: break
             }
         }
-        return (error as? PlaylistSyncError)?.localizedDescription ?? "Dropbox sync could not finish. Pending changes are retained; retry Sync now."
+        return (error as? PlaylistSyncError)?.localizedDescription ?? String(localized: "Dropbox sync could not finish. Pending changes are retained; retry Sync now.")
     }
     func syncNow() async {
         if isWorking { syncAgain = true; return }
@@ -158,7 +158,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             let accessing = root.startAccessingSecurityScopedResource()
             defer { if accessing { root.stopAccessingSecurityScopedResource() } }
             recovery = nil
-            status = "Syncing…"
+            status = String(localized: "Syncing…")
             var activePairing = pairing
             guard let liveRootPath = music.path_display else { throw PlaylistSyncError.pairingChanged }
             activePairing.remoteRootPath = liveRootPath
@@ -234,8 +234,8 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             refreshStatus()
             let conflicts = states.filter { $0.issue == "conflict" }.count
             let incomplete = states.filter { $0.issue == "incomplete" || $0.issue == "invalid" }.count
-            status = blocked + pendingErrors + uploadsFailed + conflicts + incomplete + states.filter { $0.intent != nil }.count == 0 ? "Crates synced. Audio availability is shown per crate." :
-                "Changes are waiting to sync. Review the affected crate for details."
+            status = blocked + pendingErrors + uploadsFailed + conflicts + incomplete + states.filter { $0.intent != nil }.count == 0 ? String(localized: "Crates synced. Audio availability is shown per crate.") :
+                String(localized: "Changes are waiting to sync. Review the affected crate for details.")
         } catch { status = safeMessage(error) }
     }
     private func mapLocal(_ id: Int64, snapshotPath: String?, root: URL, pairing: SyncPairing, client: DropboxPlaylistTransport, db: DatabaseManager) async throws -> String {
@@ -259,7 +259,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
     func summary(for id: UUID) -> String {
         let state = states.first { $0.localID == id }
         if let recovery { return recovery }
-        if isConnected && !isPaired { return "Check music folder" }
+        if isConnected && !isPaired { return String(localized: "Check music folder") }
         return CrateSyncPresentation.summary(state: state, connected: isConnected && isPaired,
             working: isWorking, queued: state.map { queuedCrates.contains($0.sharedID) } ?? false)
     }
@@ -273,13 +273,13 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
 
     func chooseMusicFolder() async {
         let alert = NSAlert()
-        alert.messageText = "Choose music folder"
-        alert.informativeText = "Enter the folder path in Dropbox, then choose its matching local Mac folder. Use / for the Crate App folder."
+        alert.messageText = String(localized: "Choose music folder")
+        alert.informativeText = String(localized: "Enter the folder path in Dropbox, then choose its matching local Mac folder. Use / for the Crate App folder.")
         let field = NSTextField(string: UserDefaults.standard.string(forKey: "dropboxPlaylistMusicPath").flatMap { $0.isEmpty ? nil : $0 } ?? "/")
         field.frame = NSRect(x: 0, y: 0, width: 380, height: 24)
         alert.accessoryView = field
-        alert.addButton(withTitle: "Choose local folder…")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: String(localized: "Choose local folder…"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         UserDefaults.standard.set(field.stringValue, forKey: "dropboxPlaylistMusicPath")
         await pair(remotePath: field.stringValue)
@@ -290,7 +290,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             return "\(track.title) — \(track.artist)"
         }
         if let path = member.localPath { return URL(fileURLWithPath: path).lastPathComponent }
-        return "Unavailable recording at position \(position + 1)"
+        return String(localized: "Unavailable recording at position \(position + 1)")
     }
 
     func resolve(_ state: SyncPlaylistState) {
@@ -299,7 +299,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             guard var current = try db.syncStates().first(where: { $0.localID == state.localID }) else { return }
             let revisions = try db.syncRevisions(current.sharedID)
             let graph = try RevisionGraph(revisions: revisions)
-            guard !graph.incomplete else { status = "Waiting for missing revisions. Sync again before reviewing."; return }
+            guard !graph.incomplete else { status = String(localized: "Waiting for missing revisions. Sync again before reviewing."); return }
             current.heads = graph.heads
             let versions = revisions.filter { current.heads.contains($0.revisionId) }.sorted { $0.revisionId < $1.revisionId }
             guard versions.count > 1 else { refreshStatus(); return }
@@ -309,30 +309,30 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                     .flatMap { String(data: $0, encoding: .utf8) }
             }
             let alert = NSAlert()
-            alert.messageText = "Changes on both devices"
-            alert.informativeText = "Review each name and ordered track list below. Deleted versions remove the crate on both devices; music files remain. Keep both preserves the other live version as a separate crate."
+            alert.messageText = String(localized: "Changes on both devices")
+            alert.informativeText = String(localized: "Review each name and ordered track list below. Deleted versions remove the crate on both devices; music files remain. Keep both preserves the other live version as a separate crate.")
             let ownVersions = versions.filter { $0.deviceId == localDevice }
             let otherVersions = versions.filter { $0.deviceId != localDevice }
             // Restored devices can have conflicts containing no current-device head.
             // Keep all heads reviewable without mislabelling a foreign head as this Mac.
             let macVersions = ownVersions.isEmpty ? versions : ownVersions
             let phoneVersions = otherVersions.isEmpty ? versions : otherVersions
-            alert.addButton(withTitle: ownVersions.isEmpty ? "Use selected version" : "Use Mac version")
-            alert.addButton(withTitle: otherVersions.isEmpty ? "Use other selected version" : "Use iPhone version")
-            alert.addButton(withTitle: "Keep both")
-            alert.addButton(withTitle: "Cancel")
+            alert.addButton(withTitle: ownVersions.isEmpty ? String(localized: "Use selected version") : String(localized: "Use Mac version"))
+            alert.addButton(withTitle: otherVersions.isEmpty ? String(localized: "Use other selected version") : String(localized: "Use iPhone version"))
+            alert.addButton(withTitle: String(localized: "Keep both"))
+            alert.addButton(withTitle: String(localized: "Cancel"))
             alert.buttons[2].isEnabled = versions.contains { !$0.deleted }
             let mac = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 480, height: 26))
             let phone = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 480, height: 26))
             let titles = versions.enumerated().map { index, version in
-                "Version \(index + 1): \(version.name) — \(version.deviceId == localDevice ? "Mac (this device)" : "iPhone / other device")\(version.deleted ? " — Deleted" : "")"
+                String(localized: "Version \(index + 1): \(version.name) — \(version.deviceId == localDevice ? String(localized: "Mac (this device)") : String(localized: "iPhone / other device"))\(version.deleted ? String(localized: " — Deleted") : "")")
             }
             func title(_ version: PlaylistRevision) -> String { titles[versions.firstIndex { $0.revisionId == version.revisionId }!] }
             mac.addItems(withTitles: macVersions.map(title)); phone.addItems(withTitles: phoneVersions.map(title))
             if ownVersions.isEmpty || otherVersions.isEmpty { phone.selectItem(at: min(1, phoneVersions.count - 1)) }
             var previews: [String] = []
             for (index, version) in versions.enumerated() {
-                var lines = [titles[index], "Name: \(version.name)", version.deleted ? "Crate deleted" : "Ordered tracks:"]
+                var lines = [titles[index], String(localized: "Name: \(version.name)"), version.deleted ? String(localized: "Crate deleted") : String(localized: "Ordered tracks:")]
                 for (position, ref) in version.tracks.enumerated() {
                     let id = try db.syncMapping(fileID: ref.fileId)
                     lines.append("\(position + 1). " + trackLabel(SyncMember(fileId: ref.fileId, localTrackID: id), position: position))
@@ -341,7 +341,7 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                     let added = Set(version.tracks.map(\.fileId)).subtracting(other.tracks.map(\.fileId)).count
                     let removed = Set(other.tracks.map(\.fileId)).subtracting(version.tracks.map(\.fileId)).count
                     let order = version.tracks.map(\.fileId) != other.tracks.map(\.fileId)
-                    return "Compared with \(other.name): \(added) added, \(removed) removed; \(order ? "order/membership differs" : "same order"); \(version.name == other.name ? "same name" : "name differs"); \(version.deleted == other.deleted ? "same deletion state" : "delete versus edit")."
+                    return String(localized: "Compared with \(other.name): \(added) added, \(removed) removed; \(order ? String(localized: "order/membership differs") : String(localized: "same order")); \(version.name == other.name ? String(localized: "same name") : String(localized: "name differs")); \(version.deleted == other.deleted ? String(localized: "same deletion state") : String(localized: "delete versus edit")).")
                 }
                 previews.append((lines + differences).joined(separator: "\n"))
             }
@@ -352,8 +352,8 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
             text.textContainer?.widthTracksTextView = true
             let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 480, height: 300))
             scroll.hasVerticalScroller = true; scroll.documentView = text
-            let stack = NSStackView(views: [scroll, NSTextField(labelWithString: ownVersions.isEmpty ? "Version to keep:" : "Mac choice:"), mac,
-                NSTextField(labelWithString: otherVersions.isEmpty ? "Other version:" : "iPhone / other device choice:"), phone])
+            let stack = NSStackView(views: [scroll, NSTextField(labelWithString: ownVersions.isEmpty ? String(localized: "Version to keep:") : String(localized: "Mac choice:")), mac,
+                NSTextField(labelWithString: otherVersions.isEmpty ? String(localized: "Other version:") : String(localized: "iPhone / other device choice:")), phone])
             stack.orientation = .vertical; stack.alignment = .leading
             alert.accessoryView = stack
             let commit: (NSApplication.ModalResponse) -> Void = { [weak self] response in
@@ -364,11 +364,11 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                     var copy: String?
                     if response == .alertThirdButtonReturn {
                         guard macVersion.revisionId != phoneVersion.revisionId else {
-                            self.status = "Choose two different versions for Keep both."
+                            self.status = String(localized: "Choose two different versions for Keep both.")
                             return
                         }
                         guard !macVersion.deleted || !phoneVersion.deleted else {
-                            self.status = "Both selected versions delete the crate. Choose a live version to keep both."
+                            self.status = String(localized: "Both selected versions delete the crate. Choose a live version to keep both.")
                             return
                         }
                         if phoneVersion.deleted { selected = phoneVersion; copy = macVersion.deleted ? nil : macVersion.revisionId }
@@ -376,9 +376,9 @@ final class DropboxPlaylistSyncCoordinator: ObservableObject {
                     }
                     try db.resolveSyncConflict(localID: current.localID, chosen: selected.revisionId, expectedHeads: current.heads, keepBoth: copy)
                     AppCoordinator.shared?.playlistManager.loadPlaylists()
-                    self.status = "Conflict resolution queued."; self.scheduleSync()
+                    self.status = String(localized: "Conflict resolution queued."); self.scheduleSync()
                 } catch PlaylistSyncError.staleEditor {
-                    self.status = "Changes arrived while reviewing. Review the refreshed versions."
+                    self.status = String(localized: "Changes arrived while reviewing. Review the refreshed versions.")
                     self.refreshStatus()
                     if let fresh = self.states.first(where: { $0.localID == current.localID }) { self.resolve(fresh) }
                 } catch { self.status = self.safeMessage(error) }

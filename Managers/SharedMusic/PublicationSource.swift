@@ -42,12 +42,58 @@ final class PublicationSource {
         }
         return parts
     }
+    /// Called only after explicit confirmation. The entire selection is journaled before
+    /// any copying/provider work, so a restart retains every approved item for review.
+    func prepareIntents(_ selections: [(trackID: Int64, destination: String)],
+                        expectedPairing: SyncPairing? = nil, expectedConnectionEpoch: UInt64? = nil,
+                        expectedPaths: [Int64: String]? = nil) throws -> [PublicationID] {
+        try manager.dbQueue.write { db in
+            guard let data = try Data.fetchOne(db, sql: "SELECT value FROM playlist_sync_meta WHERE key='pairing'") else { throw PublicationError.unavailableScope }
+            let pairing = try JSONDecoder().decode(SyncPairing.self, from: data)
+            guard expectedPairing == nil || expectedPairing == pairing,
+                  expectedConnectionEpoch == nil || expectedConnectionEpoch == PublicationConnectionEpoch.shared.current() else { throw PublicationError.root }
+            return try selections.map { selected in
+                _ = try Self.components(selected.destination)
+                guard let row = try Row.fetchOne(db,
+                    sql: "SELECT t.path, f.bookmark_data FROM tracks t LEFT JOIN folders f ON f.id=t.folder_id WHERE t.id=?",
+                    arguments: [selected.trackID]) else { throw PublicationError.unavailableSource }
+                let path: String = row["path"]
+                guard expectedPaths == nil || expectedPaths?[selected.trackID] == path else { throw PublicationError.sourceChanged }
+                let record = Publication(id: UUID(), trackID: selected.trackID, generation: 1,
+                    snapshot: PublicationSnapshot(trackID: selected.trackID, sourcePath: row["path"], sourceBookmark: (row["bookmark_data"] as Data?) ?? Data(), pairing: pairing),
+                    destination: selected.destination, state: .capturing)
+                try PublicationJournal.save(record, in: db)
+                return record.id
+            }
+        }
+    }
     func capture(trackID: Int64, destinationRelativePath: String, confirmedOutsideRootCopy: Bool = false) async throws -> PublicationID {
         try Task.checkCancellation()
+        let id = try prepareIntents([(trackID, destinationRelativePath)])[0]
+        return try await capturePrepared(id: id, confirmedOutsideRootCopy: confirmedOutsideRootCopy)
+    }
+    func capturePrepared(id: PublicationID, confirmedOutsideRootCopy: Bool, expectedConnectionEpoch: UInt64? = nil) async throws -> PublicationID {
+        guard let intent = try journal.record(id), intent.state == .capturing, !intent.snapshot.isReady else { throw PublicationError.invalidTransition }
+        do { return try await captureApproved(intent: intent, confirmedOutsideRootCopy: confirmedOutsideRootCopy, expectedConnectionEpoch: expectedConnectionEpoch) }
+        catch {
+            if var failed = try journal.record(id), failed.generation == intent.generation, failed.state == .capturing {
+                failed.state = error is CancellationError ? .cancelled : .failed
+                failed.error = (error as? PublicationError) ?? (error is CancellationError ? .cancelled : .storage)
+                try journal.save(failed)
+            }
+            throw error
+        }
+    }
+    private func captureApproved(intent: Publication, confirmedOutsideRootCopy: Bool, expectedConnectionEpoch: UInt64?) async throws -> PublicationID {
+        let id = intent.id, trackID = intent.trackID, destinationRelativePath = intent.destination
+        try Task.checkCancellation()
+        guard expectedConnectionEpoch == nil || expectedConnectionEpoch == PublicationConnectionEpoch.shared.current() else { throw PublicationError.auth }
         _ = try Self.components(destinationRelativePath)
         guard let pairing = try manager.syncPairing() else { throw PublicationError.unavailableScope }
         try pairing.descriptor.validate()
         let source = try selectedSource(trackID)
+        guard pairing == intent.snapshot.pairing else { throw PublicationError.root }
+        guard source.path == intent.snapshot.sourcePath, source.bookmark == intent.snapshot.sourceBookmark else { throw PublicationError.sourceChanged }
         let rootLease = try scope.access(bookmark: pairing.localRootBookmark, expectedPath: pairing.localRootPath)
         let sourceLease = try scope.access(bookmark: source.bookmark, expectedPath: source.folder)
         return try withExtendedLifetime((rootLease, sourceLease)) {
@@ -65,7 +111,7 @@ final class PublicationSource {
             let input = try Self.openRelative(relative, root: sourceRoot)
             defer { close(input) }
             let initial = try Self.identity(input)
-            var record = Publication(id: UUID(), trackID: trackID, generation: 1,
+            var record = Publication(id: id, trackID: trackID, generation: 1,
                                      snapshot: PublicationSnapshot(trackID: trackID, sourcePath: source.path,
                                       sourceBookmark: source.bookmark, pairing: pairing, sourceIdentity: initial),
                                      destination: destinationRelativePath, state: .capturing)
@@ -89,6 +135,9 @@ final class PublicationSource {
                       try selectedSource(trackID).path == source.path,
                       try manager.syncPairing() == pairing else { throw PublicationError.sourceChanged }
                 try Task.checkCancellation()
+                guard try journal.record(id)?.generation == intent.generation,
+                      try manager.syncPairing() == intent.snapshot.pairing,
+                      expectedConnectionEpoch == nil || expectedConnectionEpoch == PublicationConnectionEpoch.shared.current() else { throw PublicationError.root }
                 let paired: PublicationFileIdentity
                 if inside {
                     let existing = try Self.openRelative(destinationRelativePath, root: root)

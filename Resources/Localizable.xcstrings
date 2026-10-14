@@ -1,6 +1,511 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld added · %lld already shared · %lld failed" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld added · %lld already shared · %lld failed"
+          }
+        }
+      }
+    },
+    "%lld tracks · %@ known" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld track · %@ known"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tracks · %@ known"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "A recording could not be captured. Review its result and try again." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A recording could not be captured. Review its result and try again."
+          }
+        }
+      }
+    },
+    "Add %lld tracks" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Add %lld track"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Add %lld tracks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Add to shared music" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to shared music"
+          }
+        }
+      }
+    },
+    "Add to shared music…" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to shared music…"
+          }
+        }
+      }
+    },
+    "Added" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added"
+          }
+        }
+      }
+    },
+    "Already shared" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already shared"
+          }
+        }
+      }
+    },
+    "Approve a different destination path to retry." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve a different destination path to retry."
+          }
+        }
+      }
+    },
+    "Cancelled" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        }
+      }
+    },
+    "Capturing" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capturing"
+          }
+        }
+      }
+    },
+    "Check outcome" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check outcome"
+          }
+        }
+      }
+    },
+    "Check outcome reads the destination without uploading again." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check outcome reads the destination without uploading again."
+          }
+        }
+      }
+    },
+    "Check the original recording and file access. Retry opens a fresh confirmation when new capture is needed." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the original recording and file access. Retry opens a fresh confirmation when new capture is needed."
+          }
+        }
+      }
+    },
+    "Choose and approve another destination path. Existing recordings are preserved." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose and approve another destination path. Existing recordings are preserved."
+          }
+        }
+      }
+    },
+    "Destination relative path" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination relative path"
+          }
+        }
+      }
+    },
+    "Existing files are never overwritten. Identical bytes may already be shared; different bytes need a new name." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existing files are never overwritten. Identical bytes may already be shared; different bytes need a new name."
+          }
+        }
+      }
+    },
+    "Failed" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        }
+      }
+    },
+    "Free space in Dropbox, then retry this recording." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free space in Dropbox, then retry this recording."
+          }
+        }
+      }
+    },
+    "I approve copying the selected outside-folder recordings into the paired music folder at these paths." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I approve copying the selected outside-folder recordings into the paired music folder at these paths."
+          }
+        }
+      }
+    },
+    "Needs a new name" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a new name"
+          }
+        }
+      }
+    },
+    "Original files and crate memberships are preserved. Audio is copied without conversion or tag changes." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original files and crate memberships are preserved. Audio is copied without conversion or tag changes."
+          }
+        }
+      }
+    },
+    "Outcome uncertain" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outcome uncertain"
+          }
+        }
+      }
+    },
+    "Phone playback depends on decoder support. Adding a file does not confirm it will play." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phone playback depends on decoder support. Adding a file does not confirm it will play."
+          }
+        }
+      }
+    },
+    "Queued — resume when ready" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queued — resume when ready"
+          }
+        }
+      }
+    },
+    "Reconnect Dropbox in connection settings, then retry." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnect Dropbox in connection settings, then retry."
+          }
+        }
+      }
+    },
+    "Rename or move the original inside your paired folder, then select it again." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename or move the original inside your paired folder, then select it again."
+          }
+        }
+      }
+    },
+    "Retry…" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry…"
+          }
+        }
+      }
+    },
+    "Review stale members if the recording was replaced or moved." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review stale members if the recording was replaced or moved."
+          }
+        }
+      }
+    },
+    "Review the paired music folder in connection settings, then retry." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the paired music folder in connection settings, then retry."
+          }
+        }
+      }
+    },
+    "Set up connection…" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up connection…"
+          }
+        }
+      }
+    },
+    "Shared music" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared music"
+          }
+        }
+      }
+    },
+    "Shared music results could not be read. Try again." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared music results could not be read. Try again."
+          }
+        }
+      }
+    },
+    "Source changed" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source changed"
+          }
+        }
+      }
+    },
+    "The connection changed. Review the destination again before adding recordings." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection changed. Review the destination again before adding recordings."
+          }
+        }
+      }
+    },
+    "The outcome could not be checked. The uncertain result is retained; check your connection and try again." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The outcome could not be checked. The uncertain result is retained; check your connection and try again."
+          }
+        }
+      }
+    },
+    "The selected recordings could not be prepared. Check their file access and try again." : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected recordings could not be prepared. Check their file access and try again."
+          }
+        }
+      }
+    },
+    "Uploading" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploading"
+          }
+        }
+      }
+    },
+    "Verifying" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifying"
+          }
+        }
+      }
+    },
+    "Waiting to capture" : {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting to capture"
+          }
+        }
+      }
+    },
+
       "This crate is no longer available.": {
         "localizations": {
           "en": {

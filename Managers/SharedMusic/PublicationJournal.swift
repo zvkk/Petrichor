@@ -51,7 +51,8 @@ final class PublicationJournal {
                   old.snapshot.trackID == record.snapshot.trackID,
                   old.snapshot.sourcePath == record.snapshot.sourcePath,
                   old.snapshot.sourceBookmark == record.snapshot.sourceBookmark,
-                  old.snapshot.sourceIdentity == record.snapshot.sourceIdentity,
+                  (old.snapshot.sourceIdentity == record.snapshot.sourceIdentity ||
+                   (old.state == .capturing && record.state == .capturing && old.snapshot.sourceIdentity == nil)),
                   old.snapshot.pairing == record.snapshot.pairing,
                   (!old.snapshot.isReady || old.snapshot == record.snapshot) else { throw PublicationError.integrity }
         }

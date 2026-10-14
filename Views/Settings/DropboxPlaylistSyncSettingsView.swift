@@ -66,8 +66,15 @@ private struct SharedCrateDetails: View {
                 }
                 if CrateSyncPresentation.needsAdding(state) > 0 {
                     Text("\(CrateSyncPresentation.needsAdding(state)) tracks need adding to shared music")
-                    Text("Add these recordings to your paired Dropbox music folder, then sync again.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text("Review stale members if the recording was replaced or moved.").font(.caption).foregroundStyle(.secondary)
+                    Button("Add to shared music…") {
+                        let ids = members.filter { $0.fileId == nil }.compactMap(\.localTrackID)
+                        dismiss()
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            PublicationCoordinator.shared.request(trackIDs: ids)
+                        }
+                    }
                 }
                 if members.contains(where: { $0.localTrackID == nil || $0.fileId == nil }) {
                     ScrollView {

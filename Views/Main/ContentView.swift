@@ -39,6 +39,7 @@ private enum MainWindowPanelState: String {
 private let mainWindowPanelStateKey = "mainWindowPanelState"
 
 struct ContentView: View {
+    @ObservedObject private var publication = PublicationCoordinator.shared
     @EnvironmentObject var playbackManager: PlaybackManager
     @EnvironmentObject var libraryManager: LibraryManager
     @EnvironmentObject var playlistManager: PlaylistManager
@@ -95,6 +96,9 @@ struct ContentView: View {
 
             playerControls
                 .animation(.easeInOut(duration: 0.3), value: libraryManager.folders.isEmpty)
+        }
+        .sheet(isPresented: $publication.showingConfirmation) {
+            PublicationSheet(coordinator: publication)
         }
         .onKeyPress(.space) {
             if isCurrentlyEditingText() {

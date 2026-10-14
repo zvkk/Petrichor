@@ -188,6 +188,7 @@ extension NotificationType: Codable {}
 // MARK: - Notification Tray View
 
 struct NotificationTray: View {
+    @ObservedObject private var publication = PublicationCoordinator.shared
     @StateObject private var manager = NotificationManager.shared
     @State private var showingPopover = false
     @State private var isHovered = false
@@ -244,7 +245,7 @@ struct NotificationTray: View {
     // MARK: - Computed Properties
     
     private var hasNotifications: Bool {
-        !manager.messages.isEmpty
+        !manager.messages.isEmpty || !publication.rows.isEmpty || publication.issue != nil
     }
     
     private var mostSevereNotificationType: NotificationType {
@@ -269,6 +270,7 @@ struct NotificationTray: View {
 // MARK: - Notification Popover
 
 struct NotificationPopover: View {
+    @ObservedObject private var publication = PublicationCoordinator.shared
     @StateObject private var manager = NotificationManager.shared
     @Binding var isPresented: Bool
     
@@ -295,12 +297,17 @@ struct NotificationPopover: View {
             
             Divider()
             
+            if !publication.rows.isEmpty || publication.issue != nil {
+                ScrollView { PublicationResults(coordinator: publication) }.frame(maxHeight: 240)
+                Divider()
+            }
+
             // Content
             if manager.isActivityInProgress {
                 scanProgressView
-            } else if manager.messages.isEmpty {
+            } else if manager.messages.isEmpty && publication.rows.isEmpty && publication.issue == nil {
                 emptyState
-            } else {
+            } else if !manager.messages.isEmpty {
                 messagesList
             }
         }

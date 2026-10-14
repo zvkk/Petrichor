@@ -15,6 +15,10 @@ enum TrackContextMenu {
             currentContext: currentContext
         ))
         
+        items.append(.button(title: String(localized: "Add to shared music…")) {
+            Task { @MainActor in PublicationCoordinator.shared.request(trackIDs: [track].compactMap(\.trackId)) }
+        })
+
         // Add info item
         items.append(createShowInfoItem(for: track))
         
@@ -58,6 +62,10 @@ enum TrackContextMenu {
         
         var items: [ContextMenuItem] = []
         
+        items.append(.button(title: String(localized: "Add to shared music…")) {
+            Task { @MainActor in PublicationCoordinator.shared.request(trackIDs: tracks.compactMap(\.trackId)) }
+        })
+
         items.append(contentsOf: createBulkPlaybackItems(
             for: tracks,
             playlistManager: playlistManager

@@ -14,9 +14,9 @@ enum PlaylistMenuBuilder {
 
         if playlist.type != .stations {
             items.append(.divider)
-            items.append(.button(title: "Copy tracklist") { playlistManager.exportCrate(playlistID: playlist.id, format: .tracklist, copy: true) })
-            items.append(.button(title: "Save tracklist…") { playlistManager.exportCrate(playlistID: playlist.id, format: .tracklist) })
-            items.append(.button(title: "Export to Rekordbox…") { playlistManager.exportCrate(playlistID: playlist.id, format: .rekordbox) })
+            items.append(.button(title: String(localized: "Copy tracklist")) { playlistManager.exportCrate(playlistID: playlist.id, format: .tracklist, copy: true) })
+            items.append(.button(title: String(localized: "Save tracklist…")) { playlistManager.exportCrate(playlistID: playlist.id, format: .tracklist) })
+            items.append(.button(title: String(localized: "Export to Rekordbox…")) { playlistManager.exportCrate(playlistID: playlist.id, format: .rekordbox) })
         }
 
         guard playlist.isUserEditable else { return items }

@@ -37,6 +37,7 @@ extension PlaybackManager {
         }
         unmirroredTracks = [:]
         injectedNext = nil
+        retireUnownedEntries()
     }
 
     func mirrorEntries() -> [QueueEntry] {
@@ -106,12 +107,14 @@ extension PlaybackManager {
         audioPlayer.removeQueueEntry(id: injected.entryId)
         unmirroredTracks.removeValue(forKey: injected.entryId.id)
         injectedNext = nil
+        retireUnownedEntries()
     }
 
     /// Folds a just-started injected entry into the mirror: it replaces the entry
     /// mirrored at `standsInFor` and moves into that slot. Both engine calls happen
     /// after the audio transition, so the boundary stays gapless.
     func absorbInjectedEntry(_ injected: InjectedNext) {
+        defer { retireUnownedEntries() }
         injectedNext = nil
         unmirroredTracks.removeValue(forKey: injected.entryId.id)
 
@@ -345,6 +348,7 @@ extension PlaybackManager {
             audioPlayer.stop()
         }
         audioPlayer.setQueue(entries, startingAt: index, startPaused: resumeAt > 0)
+        retireUnownedEntries()
     }
 
     /// Jumps to a queue position, leaving the rest of the queue in place.
@@ -393,6 +397,7 @@ extension PlaybackManager {
         // Removing the engine's current entry would make it advance or stop; the
         // callers guard against it, so refuse rather than disturb playback.
         guard mirror[index].entryId != currentEntryId else { return }
+        defer { retireUnownedEntries() }
         let entryId = mirror.remove(at: index).entryId
         audioPlayer.removeQueueEntry(id: entryId)
         hydrateArtworkWindow()
@@ -423,6 +428,7 @@ extension PlaybackManager {
     /// index-based removal path lets either side refuse and leaves the two queues
     /// differing in membership, which every later edit assumes cannot happen.
     func dropSkippedEntry(_ entryId: AudioEntryId) {
+        defer { completeEntry(entryId); retireUnownedEntries() }
         unmirroredTracks.removeValue(forKey: entryId.id)
         if injectedNext?.entryId == entryId {
             injectedNext = nil
@@ -438,6 +444,7 @@ extension PlaybackManager {
         unmirroredTracks = [:]
         injectedNext = nil
         audioPlayer.clearQueue()
+        retireUnownedEntries()
     }
 
     /// Shuffles the upcoming entries engine-side and mirrors the resulting order back

@@ -366,6 +366,13 @@ extension PlaylistManager {
 // The same snapshot/availability flow serves native menu and bulk-sheet exports.
 enum CrateExportFormat: String, CaseIterable {
     case m3u = "M3U", tracklist = "Tracklist", rekordbox = "Rekordbox XML"
+    var displayName: String {
+        switch self {
+        case .m3u: String(localized: "M3U")
+        case .tracklist: String(localized: "Tracklist")
+        case .rekordbox: String(localized: "Rekordbox XML")
+        }
+    }
     var fileExtension: String { switch self { case .m3u: "m3u"; case .tracklist: "txt"; case .rekordbox: "xml" } }
 }
 
@@ -378,11 +385,11 @@ extension PlaylistManager {
         guard available.count != snapshot.tracks.count else { return snapshot }
         let missing = snapshot.tracks.filter { format == .tracklist ? !$0.hasDisplayMetadata : $0.localURL == nil }
         let alert = NSAlert()
-        alert.messageText = "Unavailable tracks in \(snapshot.name)"
+        alert.messageText = String(localized: "Unavailable tracks in \(snapshot.name)")
         alert.informativeText = missing.map { "• " + $0.title }.joined(separator: "\n")
-            + "\n\nExport available tracks will export \(available.count) of \(snapshot.tracks.count) tracks."
-        alert.addButton(withTitle: "Cancel")
-        if !available.isEmpty { alert.addButton(withTitle: "Export available tracks (\(available.count))") }
+            + String(localized: "\n\nExport available tracks will export \(available.count) of \(snapshot.tracks.count) tracks.")
+        alert.addButton(withTitle: String(localized: "Cancel"))
+        if !available.isEmpty { alert.addButton(withTitle: String(localized: "Export available tracks (\(available.count))")) }
         guard alert.runModal() == .alertSecondButtonReturn else { return nil }
         return CrateExportSnapshot(name: snapshot.name, tracks: available)
     }
@@ -396,12 +403,12 @@ extension PlaylistManager {
                 var includeLabel = false
                 if format == .tracklist {
                     let options = NSAlert()
-                    options.messageText = copy ? "Copy tracklist" : "Save tracklist"
-                    options.addButton(withTitle: "Continue")
-                    options.addButton(withTitle: "Cancel")
-                    let numbering = NSButton(checkboxWithTitle: "Number tracks", target: nil, action: nil)
+                    options.messageText = copy ? String(localized: "Copy tracklist") : String(localized: "Save tracklist")
+                    options.addButton(withTitle: String(localized: "Continue"))
+                    options.addButton(withTitle: String(localized: "Cancel"))
+                    let numbering = NSButton(checkboxWithTitle: String(localized: "Number tracks"), target: nil, action: nil)
                     numbering.state = .on
-                    let labels = NSButton(checkboxWithTitle: "Include labels", target: nil, action: nil)
+                    let labels = NSButton(checkboxWithTitle: String(localized: "Include labels"), target: nil, action: nil)
                     let stack = NSStackView(views: [numbering, labels])
                     stack.orientation = .vertical
                     stack.alignment = .leading
@@ -413,7 +420,7 @@ extension PlaylistManager {
                 if copy {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(TracklistFormatter.render(snapshot.tracks, numbered: numbered, includeLabel: includeLabel), forType: .string)
-                    NotificationManager.shared.addMessage(.info, "Copied tracklist (\(snapshot.tracks.count) tracks)")
+                    NotificationManager.shared.addMessage(.info, String(localized: "Copied tracklist (\(snapshot.tracks.count) tracks)"))
                     return
                 }
                 let panel = NSSavePanel()
@@ -421,7 +428,7 @@ extension PlaylistManager {
                 panel.allowedContentTypes = [UTType(filenameExtension: format.fileExtension) ?? .data]
                 guard await panel.begin() == .OK, let url = panel.url else { return }
                 try writeExportSnapshot(snapshot, format: format, to: url, numbered: numbered, includeLabel: includeLabel)
-                NotificationManager.shared.addMessage(.info, "Exported \(snapshot.name) (\(snapshot.tracks.count) tracks)")
+                NotificationManager.shared.addMessage(.info, String(localized: "Exported \(snapshot.name) (\(snapshot.tracks.count) tracks)"))
             } catch { NotificationManager.shared.addMessage(.error, error.localizedDescription) }
         }
     }

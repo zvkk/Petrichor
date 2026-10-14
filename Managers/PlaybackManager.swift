@@ -126,14 +126,45 @@ class PlaybackManager: NSObject, ObservableObject {
     // MARK: - Engine queue mirror
 
     /// Identity of the track currently loaded in the engine.
-    var currentEntryId: AudioEntryId?
-    // Tombstones deliberately survive replacement: EOF can arrive after a new load.
+    var currentEntryId: AudioEntryId? {
+        didSet {
+            if let currentEntryId { pendingTerminalEntries.insert(currentEntryId) }
+        }
+    }
+    // Submitted entries survive replacement only until their terminal callback.
     var entryPurposes: [AudioEntryId: PlaybackPurpose] = [:]
     var entryTracks: [AudioEntryId: Track] = [:]
+    var pendingTerminalEntries: Set<AudioEntryId> = []
+    private var classifiedEntries: Set<AudioEntryId> = []
+
+    /// Keep live ownership plus entries that could have played, never old unstarted rows.
+    func retireUnownedEntries() {
+        if let id = audioPlayer.currentEntryId, entryPurposes[id] != nil, !classifiedEntries.contains(id) {
+            pendingTerminalEntries.insert(id)
+        }
+        let owned = Set(mirror.map(\.entryId)).union([currentEntryId].compactMap { $0 }).union(entryPurposes.keys.filter {
+            unmirroredTracks[$0.id] != nil
+        }).union(pendingTerminalEntries)
+        entryPurposes = entryPurposes.filter { owned.contains($0.key) }
+        entryTracks = entryTracks.filter { owned.contains($0.key) }
+        classifiedEntries.formIntersection(owned)
+    }
+
+    func completeEntry(_ id: AudioEntryId) {
+        pendingTerminalEntries.remove(id)
+        classifiedEntries.insert(id)
+        if currentEntryId != id && queuePosition(ofEntry: id) == nil && unmirroredTracks[id.id] == nil {
+            entryPurposes.removeValue(forKey: id)
+            entryTracks.removeValue(forKey: id)
+            classifiedEntries.remove(id)
+        }
+    }
 
     func registerEntry(_ entryId: AudioEntryId, track: Track, purpose: PlaybackPurpose) {
         entryPurposes[entryId] = purpose
-        entryTracks[entryId] = track
+        var callbackTrack = track
+        callbackTrack.setArtworkData(nil)
+        entryTracks[entryId] = callbackTrack
     }
 
     func purpose(for entryId: AudioEntryId) -> PlaybackPurpose? { entryPurposes[entryId] }
@@ -355,6 +386,7 @@ class PlaybackManager: NSObject, ObservableObject {
         mirror = []
         unmirroredTracks = [:]
         injectedNext = nil
+        retireUnownedEntries()
         currentTime = 0
         isPlaying = false
         pendingPlayOnRestore = false
@@ -802,6 +834,19 @@ private extension PlaybackManager {
 
 extension PlaybackManager: AudioPlayerDelegate {
     func audioPlayerDidStartPlaying(player: PlaybackEngine, with entryId: AudioEntryId) {
+        // Production backend starts arrive on main. Retain the identity before the
+        // deferred UI work: another queue can replace this one in the same turn.
+        let retainStartedEntry = {
+            if self.entryPurposes[entryId] != nil {
+                self.pendingTerminalEntries.insert(entryId)
+                self.classifiedEntries.remove(entryId)
+            }
+        }
+        if Thread.isMainThread {
+            retainStartedEntry()
+        } else {
+            DispatchQueue.main.sync(execute: retainStartedEntry)
+        }
         DispatchQueue.main.async {
             if self.currentStation == nil, self.stationEntryIds.contains(entryId) {
                 Logger.info("Ignored a start from a superseded stream: \(entryId.id)")
@@ -973,7 +1018,10 @@ extension PlaybackManager: AudioPlayerDelegate {
         DispatchQueue.main.async {
             if self.handleStationFinish(entryId: entryId, stopReason: stopReason) { return }
 
-            defer { self.errorReportedEntryIds.remove(entryId) }
+            defer {
+                self.errorReportedEntryIds.remove(entryId)
+                self.completeEntry(entryId)
+            }
             if self.purpose(for: entryId) == .preview {
                 guard entryId == self.currentEntryId, self.isPreviewing else { return }
                 self.audioPlayer.pause()
@@ -987,11 +1035,6 @@ extension PlaybackManager: AudioPlayerDelegate {
             // own - a queue member outlives its finish and can be played again.
             let finishedTrack = self.track(forEntry: entryId)
             self.unmirroredTracks.removeValue(forKey: entryId.id)
-
-            guard self.currentTrack != nil else {
-                Logger.info("Ignoring finish - no current track")
-                return
-            }
 
             Logger.info("Track finished (reason: \(stopReason))")
 

@@ -1,6 +1,276 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+      "This crate is no longer available.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "This crate is no longer available."
+            }
+          }
+        }
+      },
+      "This crate has no tracks to export.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "This crate has no tracks to export."
+            }
+          }
+        }
+      },
+      "Some tracks have no available local audio.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Some tracks have no available local audio."
+            }
+          }
+        }
+      },
+      "Tracklist": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Tracklist"
+            }
+          }
+        }
+      },
+      "M3U": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "M3U"
+            }
+          }
+        }
+      },
+      "Rekordbox XML": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Rekordbox XML"
+            }
+          }
+        }
+      },
+      "Copy tracklist": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Copy tracklist"
+            }
+          }
+        }
+      },
+      "Save tracklist": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Save tracklist"
+            }
+          }
+        }
+      },
+      "Save tracklist…": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Save tracklist…"
+            }
+          }
+        }
+      },
+      "Export to Rekordbox…": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Export to Rekordbox…"
+            }
+          }
+        }
+      },
+      "Number tracks": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Number tracks"
+            }
+          }
+        }
+      },
+      "Include labels": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Include labels"
+            }
+          }
+        }
+      },
+      "Untitled": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Untitled"
+            }
+          }
+        }
+      },
+      "Connect Dropbox to share crates with iPhone.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Connect Dropbox to share crates with iPhone."
+            }
+          }
+        }
+      },
+      "Play Crate": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Play Crate"
+            }
+          }
+        }
+      },
+      "Add Crate to Queue": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Add Crate to Queue"
+            }
+          }
+        }
+      },
+      "Play Crate Next": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Play Crate Next"
+            }
+          }
+        }
+      },
+      "Plays a crate in Petrichor.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Plays a crate in Petrichor."
+            }
+          }
+        }
+      },
+      "Adds a crate to the end of the queue in Petrichor.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Adds a crate to the end of the queue in Petrichor."
+            }
+          }
+        }
+      },
+      "Queues a crate to play next in Petrichor.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Queues a crate to play next in Petrichor."
+            }
+          }
+        }
+      },
+      "Unavailable shared track (item %lld)": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Unavailable shared track (item %lld)"
+            }
+          }
+        }
+      },
+      "Unavailable tracks in %@": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Unavailable tracks in %@"
+            }
+          }
+        }
+      },
+      "\n\nExport available tracks will export %lld of %lld tracks.": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "\n\nExport available tracks will export %lld of %lld tracks."
+            }
+          }
+        }
+      },
+      "Export available tracks (%lld)": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Export available tracks (%lld)"
+            }
+          }
+        }
+      },
+      "Copied tracklist (%lld tracks)": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Copied tracklist (%lld tracks)"
+            }
+          }
+        }
+      },
+      "Exported %@ (%lld tracks)": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Exported %@ (%lld tracks)"
+            }
+          }
+        }
+      },
+      "Choose where to save %lld crate files": {
+        "localizations": {
+          "en": {
+            "stringUnit": {
+              "state": "translated",
+              "value": "Choose where to save %lld crate files"
+            }
+          }
+        }
+      },
     "%lld tracks unavailable on this device" : {
       "localizations": {
         "en": {

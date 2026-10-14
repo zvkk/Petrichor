@@ -32,9 +32,9 @@ enum CrateExportError: LocalizedError {
     case unavailableCrate, empty, unavailableMedia
     var errorDescription: String? {
         switch self {
-        case .unavailableCrate: "This crate is no longer available."
-        case .empty: "This crate has no tracks to export."
-        case .unavailableMedia: "Some tracks have no available local audio."
+        case .unavailableCrate: String(localized: "This crate is no longer available.")
+        case .empty: String(localized: "This crate has no tracks to export.")
+        case .unavailableMedia: String(localized: "Some tracks have no available local audio.")
         }
     }
 }
@@ -44,7 +44,8 @@ extension PlaylistManager {
     func captureExportSnapshot(playlistID: UUID) async throws -> CrateExportSnapshot {
         guard let playlist = playlists.first(where: { $0.id == playlistID }), playlist.type != .stations,
               let database = libraryManager?.databaseManager else { throw CrateExportError.unavailableCrate }
-        // Read membership, metadata and shared unresolved slots in the same database snapshot.
+        // Freeze membership once. Smart evaluation precedes the metadata read; manual/shared
+        // membership and metadata use one database read below.
         let rows: [(FullTrack?, String?)]
         if playlist.type == .smart && (playlist.smartCriteria?.autoUpdate ?? true) {
             let evaluated = try await database.getTracksForSmartPlaylist(playlist)
@@ -70,11 +71,15 @@ extension PlaylistManager {
         var frozen: [ExportTrack] = []
         for (track, sharedID) in rows {
             guard let track else {
-                frozen.append(ExportTrack(sharedID: sharedID, title: "Unavailable shared track (item \(frozen.count + 1))", hasDisplayMetadata: false))
+                frozen.append(ExportTrack(sharedID: sharedID,
+                    title: String(localized: "Unavailable shared track (item \(frozen.count + 1))"),
+                    hasDisplayMetadata: false))
                 continue
             }
             var value = ExportTrack(sharedID: sharedID, nativeID: track.trackId, title: track.title, artist: track.artist,
-                album: track.album, genre: track.genre, label: track.extendedMetadata?.label, key: track.extendedMetadata?.key, bpm: track.bpm.map(Double.init), duration: track.duration, year: Int(track.year),
+                album: track.album, genre: track.genre, label: track.extendedMetadata?.label,
+                key: track.extendedMetadata?.key, bpm: track.bpm.map(Double.init),
+                duration: track.duration, year: Int(track.year),
                 trackNumber: track.trackNumber, discNumber: track.discNumber)
             if track.url.isFileURL, FileManager.default.isReadableFile(atPath: track.url.path),
                let info = try? track.url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]), info.isRegularFile == true {

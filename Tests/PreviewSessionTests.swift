@@ -51,7 +51,12 @@ final class PreviewBackend: PlaybackBackend {
     func clearQueue() { entries = [] }
     func playQueueEntry(at index: Int, startPaused: Bool) { currentEntryId = entries[index].entryId }
     func shuffleQueue() {}
-    func setNowPlayingMetadata(_ metadata: NowPlayingMetadata?) {}
+    var metadata: NowPlayingMetadata?
+    var metadataUpdates = 0
+    func setNowPlayingMetadata(_ metadata: NowPlayingMetadata?) {
+        self.metadata = metadata
+        metadataUpdates += 1
+    }
     func setStereoWidening(enabled: Bool) {}
     func isStereoWideningEnabled() -> Bool { false }
     func setEQEnabled(_ enabled: Bool) {}
@@ -216,7 +221,7 @@ final class PreviewSessionTests: XCTestCase {
         await drain()
         XCTAssertEqual(player.currentEntryId, ordinary)
         XCTAssertEqual(player.currentTrack?.url, tracks[3].url)
-        XCTAssertEqual(player.purpose(for: stale), .preview)
+        XCTAssertNil(player.purpose(for: stale))
         XCTAssertTrue(backend.events.isEmpty)
         player.previewSession.end()
         XCTAssertEqual(player.currentEntryId, ordinary)
@@ -319,6 +324,83 @@ final class PreviewSessionTests: XCTestCase {
         XCTAssertEqual(playlists.repeatMode, .all)
     }
 
+    func testRepeatedLargeQueueRebuildsRetireUnstartedRowsAndReleaseArtwork() async {
+        var artworkTrack = tracks[0]
+        artworkTrack.setArtworkData(Data(repeating: 1, count: 1024))
+        let largeQueue = Array(repeating: artworkTrack, count: 2_000)
+        let originalID = player.currentEntryId!
+        for _ in 0..<30 {
+            player.rebuildQueueMirror(for: largeQueue)
+            XCTAssertEqual(player.entryPurposes.count, largeQueue.count + 1)
+            XCTAssertEqual(player.entryTracks.count, largeQueue.count + 1)
+            XCTAssertTrue(player.entryTracks.values.allSatisfy { $0.artworkData == nil })
+        }
+        player.currentEntryId = nil
+        backend.currentEntryId = nil
+        player.audioPlayerDidFinishPlaying(player: player.audioPlayer, entryId: originalID,
+            stopReason: .userAction, progress: 37, duration: 300)
+        await drain()
+        XCTAssertNil(player.purpose(for: originalID))
+        player.rebuildQueueMirror(for: largeQueue)
+        XCTAssertEqual(player.entryTracks.count, largeQueue.count)
+    }
+
+    func testLateOrdinaryEOFAfterNewSessionCreditsOriginalAndReleasesRecord() async throws {
+        let ordinaryID = player.currentEntryId!
+        let trackID = tracks[0].trackId!
+        player.previewSession.begin(track: tracks[1])
+        let previewID = player.currentEntryId!
+        playlists.playTrack(tracks[3])
+        let replacementID = player.currentEntryId
+        let credited = expectation(forNotification: .trackPlayCountUpdated, object: nil) { note in
+            note.userInfo?["trackId"] as? Int64 == trackID
+        }
+        player.audioPlayerDidFinishPlaying(player: player.audioPlayer, entryId: ordinaryID,
+            stopReason: .eof, progress: 300, duration: 300)
+        player.audioPlayerDidFinishPlaying(player: player.audioPlayer, entryId: previewID,
+            stopReason: .eof, progress: 300, duration: 300)
+        await fulfillment(of: [credited], timeout: 3)
+        await drain()
+        let count = try await database.getTrackPlayCount(trackId: trackID)
+        let previewCount = try await database.getTrackPlayCount(trackId: tracks[1].trackId!)
+        XCTAssertEqual(count, 1)
+        XCTAssertEqual(previewCount ?? 0, 0)
+        XCTAssertEqual(player.currentEntryId, replacementID)
+        XCTAssertNil(player.purpose(for: ordinaryID))
+        XCTAssertNil(player.purpose(for: previewID))
+    }
+
+    func testStartedSuccessorRetainedBeforeDeferredStartAndReleasedAfterLateFinish() async throws {
+        let successorID = player.mirror[1].entryId
+        backend.currentEntryId = successorID
+        backend.backendDelegate?.backendDidStartPlaying(with: successorID)
+        // The UI start callback has not drained, but this occurrence really started.
+        playlists.playTrack(tracks[2])
+        XCTAssertEqual(player.purpose(for: successorID), .ordinary)
+        await drain()
+        let trackID = tracks[3].trackId!
+        let credited = expectation(forNotification: .trackPlayCountUpdated, object: nil) { note in
+            note.userInfo?["trackId"] as? Int64 == trackID
+        }
+        player.audioPlayerDidFinishPlaying(player: player.audioPlayer, entryId: successorID,
+            stopReason: .eof, progress: 300, duration: 300)
+        await fulfillment(of: [credited], timeout: 3)
+        XCTAssertNil(player.purpose(for: successorID))
+        XCTAssertEqual(player.currentTrack?.url, tracks[2].url)
+    }
+
+    func testEndPreviewWithoutOriginalClearsBackendMetadataAndAuditionOwnership() {
+        player.currentTrack = nil
+        player.currentEntryId = nil
+        player.previewSession.begin(track: tracks[1])
+        XCTAssertEqual(backend.metadata?.title, tracks[1].title)
+        player.previewSession.end()
+        XCTAssertNil(backend.metadata)
+        XCTAssertTrue(player.mirror.isEmpty)
+        XCTAssertTrue(player.unmirroredTracks.isEmpty)
+        XCTAssertNil(player.injectedNext)
+    }
+
     func testMissingRestoreDoesNotSkipAndMissingPreviewIsRejected() async throws {
         player.previewSession.begin(track: tracks[1])
         try FileManager.default.removeItem(at: tracks[0].url)
@@ -327,5 +409,9 @@ final class PreviewSessionTests: XCTestCase {
         XCTAssertFalse(player.isPlaying)
         XCTAssertEqual(playlists.currentQueueIndex, 0)
         XCTAssertFalse(player.canPreview(tracks[0]))
+        XCTAssertEqual(backend.metadata?.title, tracks[0].title)
+        XCTAssertTrue(player.mirror.isEmpty)
+        XCTAssertTrue(player.unmirroredTracks.isEmpty)
+        XCTAssertNil(player.injectedNext)
     }
 }

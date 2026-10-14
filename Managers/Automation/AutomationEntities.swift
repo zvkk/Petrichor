@@ -387,7 +387,7 @@ struct YearAppEntityQuery: EntityStringQuery {
 // MARK: - Playlist entity
 
 struct PlaylistAppEntity: AppEntity {
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Playlist")
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Crate")
     static var defaultQuery = PlaylistEntityQuery()
 
     let id: UUID

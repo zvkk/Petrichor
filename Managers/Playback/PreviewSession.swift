@@ -66,6 +66,7 @@ final class PreviewSession {
         manager.audioPlayer.setQueue([QueueEntry(entryId: id, url: track.url)], startingAt: 0, startPaused: true)
         manager.publishNowPlayingMetadata(for: track)
         manager.loadFullTrack(for: track)
+        manager.retireUnownedEntries()
     }
 
     /// Called only after the actual entry's paused-load notification.
@@ -108,11 +109,12 @@ final class PreviewSession {
         let playlists = manager.playlistManager
         // Membership and order are frozen; deliberate metadata edits remain current.
         let latest = [manager.currentTrack].compactMap { $0 } + playlists.currentQueue
+        let byID = Dictionary(latest.compactMap { track in track.trackId.map { ($0, track) } },
+                              uniquingKeysWith: { first, _ in first })
+        let byURL = Dictionary(latest.map { ($0.url, $0) }, uniquingKeysWith: { first, _ in first })
         let refreshed: (Track) -> Track = { original in
-            latest.first { candidate in
-                if let id = original.trackId { return candidate.trackId == id }
-                return candidate.url == original.url
-            } ?? original
+            if let id = original.trackId { return byID[id] ?? original }
+            return byURL[original.url] ?? original
         }
         let restoredQueue = saved.queue.map(refreshed)
         let restoredTrack = saved.track.map(refreshed)
@@ -127,7 +129,16 @@ final class PreviewSession {
         manager.currentTime = saved.position
         manager.restoredPosition = saved.position
         manager.isPlaying = false
-        guard let track = restoredTrack else { return }
+        manager.mirror = []
+        manager.unmirroredTracks = [:]
+        manager.injectedNext = nil
+        manager.restoredUITrack = nil
+        manager.retireUnownedEntries()
+        guard let track = restoredTrack else {
+            manager.audioPlayer.setNowPlayingMetadata(nil)
+            return
+        }
+        manager.publishNowPlayingMetadata(for: track)
         guard manager.canPreview(track) else {
             manager.mirror = []
             NotificationManager.shared.addMessage(.error, String(localized: "Cannot play '\(track.title)': File not found"))
@@ -148,6 +159,7 @@ final class PreviewSession {
         manager.currentEntryId = id
         manager.pendingPreviewRestore = (id, saved.position, manager.sourceGeneration)
         manager.audioPlayer.setQueue(entries, startingAt: index, startPaused: true)
+        manager.retireUnownedEntries()
         manager.loadFullTrack(for: track)
         manager.publishNowPlayingMetadata(for: track)
     }

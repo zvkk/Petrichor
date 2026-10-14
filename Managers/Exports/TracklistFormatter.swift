@@ -8,7 +8,7 @@ enum TracklistFormatter {
             let artist = track.artist.trimmingCharacters(in: .whitespacesAndNewlines)
             let label = track.label?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let prefix = numbered ? String(format: "%0*d. ", width, index + 1) : ""
-            return prefix + (artist.isEmpty ? "Unknown Artist" : artist) + " — " + (title.isEmpty ? "Untitled" : title)
+            return prefix + (artist.isEmpty ? String(localized: "Unknown Artist") : artist) + " — " + (title.isEmpty ? String(localized: "Untitled") : title)
                 + (includeLabel && !label.isEmpty ? " [\(label)]" : "")
         }.joined(separator: "\n")
     }

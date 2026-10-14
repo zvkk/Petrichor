@@ -8,7 +8,12 @@ enum RekordboxExporter {
             return FileManager.default.isReadableFile(atPath: url.path)
                 && (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true
         }) else { throw CrateExportError.unavailableMedia }
-        var lines = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<DJ_PLAYLISTS Version=\"1.0.0\">", "<PRODUCT Name=\"Crate Mac\" Version=\"1\" Company=\"Crate\"/>", "<COLLECTION Entries=\"\(snapshot.tracks.count)\">"]
+        var lines = [
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+            "<DJ_PLAYLISTS Version=\"1.0.0\">",
+            "<PRODUCT Name=\"Crate Mac\" Version=\"1\" Company=\"Crate\"/>",
+            "<COLLECTION Entries=\"\(snapshot.tracks.count)\">"
+        ]
         for (index, track) in snapshot.tracks.enumerated() {
             var attributes: [(String, String)] = [("TrackID", String(index + 1)), ("Name", track.title), ("Artist", track.artist), ("Location", location(track.localURL!))]
             func add<T>(_ name: String, _ value: T?) { if let value { attributes.append((name, String(describing: value))) } }

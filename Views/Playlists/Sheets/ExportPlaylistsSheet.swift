@@ -26,7 +26,7 @@ struct ExportPlaylistsSheet: View {
             Divider()
             playlistList
             Picker("Format", selection: $format) {
-                ForEach(CrateExportFormat.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(CrateExportFormat.allCases, id: \.self) { Text($0.displayName).tag($0) }
             }.padding(.horizontal)
             if format == .tracklist {
                 HStack {
@@ -247,9 +247,9 @@ struct ExportPlaylistsSheet: View {
                 return
             }
             let panel = NSOpenPanel()
-            panel.title = "Export crates"
-            panel.message = "Choose where to save \(snapshots.count) crate files"
-            panel.prompt = "Export"
+            panel.title = String(localized: "Export crates")
+            panel.message = String(localized: "Choose where to save \(snapshots.count) crate files")
+            panel.prompt = String(localized: "Export")
             panel.canChooseFiles = false
             panel.canChooseDirectories = true
             panel.canCreateDirectories = true

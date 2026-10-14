@@ -296,6 +296,10 @@ enum DatabaseMigrator {
             try DatabaseManager.createPlaylistSyncSchema(db)
         }
 
+        migrator.registerMigration("v15_shared_music_publication") { db in
+            try PublicationJournal.createSchema(db)
+        }
+
         // MARK: - Future Migrations
         // Add new migrations here as: migrator.registerMigration("v14_description") { db in ... }
 

@@ -36,9 +36,9 @@ Create M `Managers/SharedMusic/` for publication service/journal/transport and `
 
 **Interfaces:** `PublicationID` is a UUID. `PublicationSource.capture(trackID: Int64, destinationRelativePath: String) async throws -> PublicationID` runs only after explicit confirmation. Persist original track ID, original path/bookmark reference, snapshot path/stat/hash, relative destination, operation generation and state. Native paths remain local. Journal states: queued, capturing, uploading, verifying, completed, cancelled, failed.
 
-- [ ] Add temp-file tests: `a/../.crate-sync/x`, absolute destination and escaping symlink are rejected; source bytes modified during capture prevent queued upload. Assert original SHA-256 and membership rows unchanged for a valid outside-root copy.
+- [x] Add temp-file tests: `a/../.crate-sync/x`, absolute destination and escaping symlink are rejected; source bytes modified during capture prevent queued upload. Assert original SHA-256 and membership rows unchanged for a valid outside-root copy.
 - [ ] Run `mac_test PublicationSourceTests`; require missing service failure. Use a temp security-scope adapter; never alter the user's actual files in unit tests.
-- [ ] Append a journal schema with stable ID and immutable snapshot identity; copy selected outside-root sources into the user-confirmed paired root without overwrite. Keep security-scoped access until capture ends, compare source identity/size/mtime/hash before and after reading. Persist operation before starting network work.
+- [x] Append a journal schema with stable ID and immutable snapshot identity; copy selected outside-root sources into the user-confirmed paired root without overwrite. Keep security-scoped access until capture ends, compare source identity/size/mtime/hash before and after reading. Persist operation before starting network work.
 
 ```sql
 CREATE TABLE shared_music_publication (
@@ -48,8 +48,8 @@ CREATE TABLE shared_music_publication (
 );
 ```
 
-- [ ] Test invalid/unavailable bookmark, source path move, crash/reopen while capturing, confirmed copy collision and transaction rollback. Confirm only selected files are read; no recursive watched-folder publisher is introduced.
-- [ ] Commit. Deliverable: A4/A5 capture safety and restartable intent without uploads.
+- [x] Test invalid/unavailable bookmark, source path move, crash/reopen while capturing, confirmed copy collision and transaction rollback. Confirm only selected files are read; no recursive watched-folder publisher is introduced.
+- [x] Commit. Deliverable: A4/A5 capture safety and restartable intent without uploads.
 
 ### Task 2: Chunked, resumable no-overwrite publication
 
@@ -57,9 +57,9 @@ CREATE TABLE shared_music_publication (
 
 **Interfaces:** `PublicationService.run(id: PublicationID) async` and `cancel(id:)`; injected transport offers start/append/finish and exact-destination metadata/hash lookup. Use two concurrent items maximum and 8 MiB chunks as implementation bounds, validated against provider limits before execution. Journal provider session/offset after each confirmed chunk; never store tokens.
 
-- [ ] Fake transport accepts finish then throws a lost-response error. On retry, assert destination metadata/hash is checked first, no second upload starts, one verified completed ID is persisted. Test differing-content existing destination: no overwrite and state requires user-approved new name.
+- [x] Fake transport accepts finish then throws a lost-response error. On retry, assert destination metadata/hash is checked first, no second upload starts, one verified completed ID is persisted. Test differing-content existing destination: no overwrite and state requires user-approved new name.
 - [ ] Run `mac_test PublicationServiceTests`; require missing resumable finalization behavior.
-- [ ] Verify current Dropbox upload-session API from official documentation at execution, retaining pinned app/root scope. Stream immutable snapshot bytes; commit with no-overwrite/no-autorename. Equal-byte existing destination may reuse verified ID; different bytes require explicit rename/cancel. Persist final real file ID and Dropbox content hash only after verification.
+- [x] Verify current Dropbox upload-session API from official documentation at execution, retaining pinned app/root scope. Stream immutable snapshot bytes; commit with no-overwrite/no-autorename. Equal-byte existing destination may reuse verified ID; different bytes require explicit rename/cancel. Persist final real file ID and Dropbox content hash only after verification.
 
 ```swift
 // A completion callback is not publication proof.
@@ -69,8 +69,8 @@ try journal.complete(id: id, fileID: remote.fileID, contentHash: remote.contentH
 ```
 
 Define `PublicationError` in `Publication.swift` with sourceChanged, invalidDestination, contentMismatch, needsNewName, auth, root, quota and retryable cases; transport maps provider failures without leaking response secrets.
-- [ ] Test chunk-offset retry, expired session restart, bounded memory/concurrency, cancellation before/after finish, quota/auth/root failure and disconnect. Independent completed items must remain completed when one fails. Verify snapshot size/hash again before finalization.
-- [ ] Commit. Deliverable: A2/A3/A5/A7 transport/journal coverage.
+- [x] Test chunk-offset retry, expired session restart, bounded memory/concurrency, cancellation before/after finish, quota/auth/root failure and disconnect. Independent completed items must remain completed when one fails. Verify snapshot size/hash again before finalization.
+- [x] Commit. Deliverable: A2/A3/A5/A7 transport/journal coverage.
 
 ### Task 3: Verified publication mapping and original identity preservation
 
@@ -78,11 +78,11 @@ Define `PublicationError` in `Publication.swift` with sourceChanged, invalidDest
 
 **Interfaces:** Existing `saveSyncMapping(fileID:trackID:hash:expectedPath:)` remains v1 mapping ingress. Extend local publication mapping to keep original-source identity and paired-copy identity/proof, rather than overwriting the original track path. `PublicationService` commits proof before scheduling blocked crate materialization.
 
-- [ ] Seed one original track outside the root in two crates and a paired copy. After verified publication, assert both native memberships and original path remain; the wire ref is the verified remote ID. Mutate original bytes and assert the next materialization is blocked until reverified.
+- [x] Seed one original track outside the root in two crates and a paired copy. After verified publication, assert both native memberships and original path remain; the wire ref is the verified remote ID. Mutate original bytes and assert the next materialization is blocked until reverified.
 - [ ] Run `mac_test PublicationMappingTests`; require current mapping path assumptions to be exercised.
-- [ ] Resolve original-to-published-copy through durable proof with source and copy hashes/identities, then reuse existing stable wire member capture. Do not merge WAV/FLAC/M4A by names or titles. Source-change invalidation must survive restart and cannot remove known remote wire members.
-- [ ] Test alias promotion, source/copy relocation, scanner reimport, mismatched content, cancelled mapping transaction and existing remote reference unavailable locally. Run `mac_test PlaylistSyncTests` too.
-- [ ] Commit. Deliverable: A6 unblock behavior preserves the original and full crate membership.
+- [x] Resolve original-to-published-copy through durable proof with source and copy hashes/identities, then reuse existing stable wire member capture. Do not merge WAV/FLAC/M4A by names or titles. Source-change invalidation must survive restart and cannot remove known remote wire members.
+- [x] Test alias promotion, source/copy relocation, scanner reimport, mismatched content, cancelled mapping transaction and existing remote reference unavailable locally. Run `mac_test PlaylistSyncTests` too.
+- [x] Commit. Deliverable: A6 unblock behavior preserves the original and full crate membership.
 
 ### Task 4: Native explicit action, phone availability and real acceptance
 
@@ -90,8 +90,12 @@ Define `PublicationError` in `Publication.swift` with sourceChanged, invalidDest
 
 **Interfaces:** Native sheet submits selected track IDs and approved destinations to task 1 only after Add N tracks. Result items map to Added, Already shared, Needs a new name, Source changed, Failed; Cancel and retry reference publication IDs.
 
-- [ ] Test presentation from journal rows: one completed and one failed operation yields both results/counts; Cancel before confirmation invokes capture zero times. Disconnected action opens existing connection settings.
-- [ ] Run `mac_test PublicationPresentationTests`; implement the existing-style sheet and progress surface. Show total known bytes, destination, collision/format warnings, original preservation and outside-root copy consent. Crate sharing never implicitly invokes publication.
-- [ ] Test phone remote-only discovery, current wanted/offline retention, crate-before-audio arrival and unsupported decoder failure. Metadata completion and actual playability remain separate states.
+- [x] Test presentation from journal rows: one completed and one failed operation yields both results/counts; Cancel before confirmation invokes capture zero times. Disconnected action opens existing connection settings.
+- [x] Run `mac_test PublicationPresentationTests`; implement the existing-style sheet and progress surface. Show total known bytes, destination, collision/format warnings, original preservation and outside-root copy consent. Crate sharing never implicitly invokes publication.
+- [x] Test phone remote-only discovery, current wanted/offline retention, crate-before-audio arrival and unsupported decoder failure. Metadata completion and actual playability remain separate states.
 - [ ] Run master checks; after milestone 1/live-write authorization use selected test audio for A1–A7. Verify originals/hashes/memberships, real download/playback, partial cancellation and exact per-item result evidence.
-- [ ] Commit source and receipt. No automated uploads or raw-tag writeback are introduced.
+- [x] Commit source and receipt. No automated uploads or raw-tag writeback are introduced.
+
+## Execution checkpoint
+
+Tasks 1–4 are source-complete and reviewed. Primary full integration evidence is in [the receipt](../../../verification/connected-crate/03-shared-music.md). The unchecked missing-behavior/red-first commands were not consistently established chronologically; bounded negative controls and final regression coverage are documented instead. The combined master/live A1–A7 step remains open. No Plan4 work, installation, actual account upload or release.

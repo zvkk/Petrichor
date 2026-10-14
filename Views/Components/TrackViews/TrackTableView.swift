@@ -57,6 +57,7 @@ struct TrackTableView: View {
     var body: some View {
         tableView
             .focused($isTableFocused)
+            .focusedValue(\.previewSelection, displayedTracks.filter { selection.contains($0.id) })
             .contextMenu(forSelectionType: Track.ID.self) { selectedIDs in
                 let selectedTracks = displayedTracks.filter { selectedIDs.contains($0.id) }
                 if !selectedTracks.isEmpty {
@@ -924,5 +925,16 @@ extension Track {
     
     var sortableIsFavorite: Int {
         isFavorite ? 0 : 1
+    }
+}
+
+private struct PreviewSelectionKey: FocusedValueKey {
+    typealias Value = [Track]
+}
+
+extension FocusedValues {
+    var previewSelection: [Track]? {
+        get { self[PreviewSelectionKey.self] }
+        set { self[PreviewSelectionKey.self] = newValue }
     }
 }

@@ -124,6 +124,13 @@ enum TrackContextMenu {
             }
         })
         
+        items.append(.button(title: String(localized: "Preview"), icon: "play.circle",
+                             isEnabled: playlistManager.audioPlayer?.canPreview(track) == true && !PreviewCommandPolicy.hasEditableFocus) {
+            guard let player = playlistManager.audioPlayer, player.canPreview(track),
+                  !PreviewCommandPolicy.hasEditableFocus else { return }
+            MainActor.assumeIsolated { player.previewSession.begin(track: track) }
+        })
+
         // Play Next
         items.append(.button(title: String(localized: "Play Next"), icon: "text.line.first.and.arrowtriangle.forward") {
             playlistManager.playNext(track)
@@ -413,7 +420,7 @@ struct ContextMenuItemView: View {
     
     var body: some View {
         switch item {
-        case .button(_, _, _, let action):
+        case .button(_, _, _, let isEnabled, let action):
             Button(action: action) {
                 HStack {
                     if let icon = item.icon {
@@ -425,6 +432,7 @@ struct ContextMenuItemView: View {
                 }
             }
             .buttonStyle(.plain)
+            .disabled(!isEnabled)
             
         case .menu(_, _, let items):
             Menu {

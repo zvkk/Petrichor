@@ -190,7 +190,9 @@ struct PlayerView: View {
                 track: playbackManager.currentTrack,
                 contextMenuItems: currentTrackContextMenuItems,
                 playlistManager: playlistManager,
-                showTechnicalInfo: showTrackTechnicalInfo
+                showTechnicalInfo: showTrackTechnicalInfo,
+                isPreviewing: playbackManager.isPreviewing,
+                endPreview: { playbackManager.previewSession.end() }
             )
             .equatable()
         }
@@ -226,7 +228,7 @@ struct PlayerView: View {
     }
 
     private var transportDisabled: Bool {
-        playbackManager.isTransportDisabled
+        playbackManager.isTransportDisabled || playbackManager.isPreviewing
     }
 
     private var previousButton: some View {
@@ -555,11 +557,13 @@ struct PlayerTrackDetailsView: View, Equatable {
     let contextMenuItems: [ContextMenuItem]
     let playlistManager: PlaylistManager
     let showTechnicalInfo: Bool
+    var isPreviewing = false
+    var endPreview: () -> Void = {}
 
     static func == (lhs: PlayerTrackDetailsView, rhs: PlayerTrackDetailsView) -> Bool {
         lhs.track?.id == rhs.track?.id &&
         lhs.track?.isFavorite == rhs.track?.isFavorite &&
-        lhs.showTechnicalInfo == rhs.showTechnicalInfo
+        lhs.showTechnicalInfo == rhs.showTechnicalInfo && lhs.isPreviewing == rhs.isPreviewing
     }
 
     // When the format badges are hidden, the remaining three rows grow slightly
@@ -619,7 +623,14 @@ struct PlayerTrackDetailsView: View, Equatable {
                 TrackContextMenuContent(items: contextMenuItems)
             }
 
-            if showTechnicalInfo {
+            if isPreviewing {
+                HStack(spacing: 8) {
+                    Text("Preview").foregroundStyle(CrateStyle.secondary)
+                    Button("End preview", action: endPreview).buttonStyle(.plain)
+                }
+                .font(.system(size: 10))
+                .frame(height: 15)
+            } else if showTechnicalInfo {
                 formatBadgeRow
             }
         }

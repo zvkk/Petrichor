@@ -332,6 +332,15 @@ struct MiniPlayerView: View {
             Spacer()
             VStack(spacing: 10) {
                 VStack(spacing: 2) {
+                    if playbackManager.isPreviewing {
+                        HStack(spacing: 8) {
+                            Text("Preview")
+                            Button("End preview") { playbackManager.previewSession.end() }
+                                .buttonStyle(.plain)
+                        }
+                        .font(.system(size: 10))
+                        .foregroundStyle(overlayTextColor)
+                    }
                     Text(playbackManager.nowPlayingSource?.title ?? String(localized: "Not Playing"))
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(overlayTextColor)

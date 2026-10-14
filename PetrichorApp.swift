@@ -24,6 +24,7 @@ struct PetrichorApp: App {
     private var internetRadioEnabled = true
 
     @State private var menuUpdateTrigger = UUID()
+    @FocusedValue(\.previewSelection) private var previewSelection
     @Environment(\.openWindow)
     private var openWindow
 
@@ -369,6 +370,12 @@ extension PetrichorApp {
     private func playbackMenuCommands() -> some Commands {
         CommandMenu("Playback") {
             playPauseMenuItem()
+            Button("Preview") {
+                guard let track = previewCommandTrack else { return }
+                appCoordinator.playbackManager.previewSession.begin(track: track)
+            }
+            .keyboardShortcut(.return, modifiers: .option)
+            .disabled(previewCommandTrack == nil)
             favoriteMenuItem()
             
             Divider()
@@ -386,6 +393,14 @@ extension PetrichorApp {
         }
     }
     
+    private var previewCommandTrack: Track? {
+        // Validate at invocation too: AppKit can keep a menu's enabled state cached.
+        if PreviewCommandPolicy.hasEditableFocus { return nil }
+        guard let selected = previewSelection, selected.count == 1, let track = selected.first,
+              appCoordinator.playbackManager.canPreview(track) else { return nil }
+        return track
+    }
+
     private func playPauseMenuItem() -> some View {
         Button {
             if appCoordinator.playbackManager.hasPlayableContent {
@@ -486,7 +501,7 @@ extension PetrichorApp {
             }
         }
         .keyboardShortcut(.rightArrow, modifiers: .command)
-        .disabled(appCoordinator.playbackManager.currentTrack == nil)
+        .disabled(appCoordinator.playbackManager.currentTrack == nil || appCoordinator.playbackManager.isPreviewing)
     }
     
     private func previousMenuItem() -> some View {
@@ -503,7 +518,7 @@ extension PetrichorApp {
             }
         }
         .keyboardShortcut(.leftArrow, modifiers: .command)
-        .disabled(appCoordinator.playbackManager.currentTrack == nil)
+        .disabled(appCoordinator.playbackManager.currentTrack == nil || appCoordinator.playbackManager.isPreviewing)
     }
     
     private func seekForwardMenuItem() -> some View {

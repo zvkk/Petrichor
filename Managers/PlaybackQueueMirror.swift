@@ -76,6 +76,7 @@ extension PlaybackManager {
     /// order: repeat-one always, repeat-all at the last entry. In every other case
     /// the queue order is already right and the engine primes it unaided.
     func primeRepeatLookahead() {
+        guard !isPreviewing else { return }
         guard !mirror.isEmpty, let next = playlistManager.peekNextTrack() else {
             clearInjectedNext()
             return
@@ -151,7 +152,7 @@ extension PlaybackManager {
             playlistManager.advanceQueueIndex(to: position)
         }
 
-        scrobbleManager?.trackStarted(track)
+        scrobbleManager?.trackStarted(track, purpose: purpose(for: entryId) ?? .preview)
         publishNowPlayingMetadata(for: track)
         loadFullTrack(for: track)
         hydrateArtworkWindow()
@@ -181,7 +182,7 @@ extension PlaybackManager {
         currentFullTrack = nil
         currentEntryId = entryId
         currentTime = position
-        scrobbleManager?.trackStarted(track)
+        scrobbleManager?.trackStarted(track, purpose: purpose(for: entryId) ?? .preview)
         loadFullTrack(for: track)
         hydrateArtworkWindow()
     }
@@ -250,6 +251,7 @@ extension PlaybackManager {
     /// field is also set by every seek, so picking it up here would resume a freshly
     /// chosen track at the position of the one before it.
     func startQueue(at index: Int, resumeAt: Double = 0) {
+        cancelPreviewForOrdinaryPlayback()
         let tracks = playlistManager.currentQueue
         guard tracks.indices.contains(index) else { return }
 
@@ -307,6 +309,7 @@ extension PlaybackManager {
     /// Installs a one-entry queue for a track that isn't in `currentQueue` (a restored
     /// track before any queue exists).
     func startOffQueueTrack(_ track: Track, url: URL, resumeAt: Double) {
+        cancelPreviewForOrdinaryPlayback()
         let entryId = AudioEntryId.fresh()
         registerEntry(entryId, track: track, purpose: .ordinary)
         mirror = []
@@ -346,6 +349,7 @@ extension PlaybackManager {
 
     /// Jumps to a queue position, leaving the rest of the queue in place.
     func jumpToQueueEntry(at index: Int) {
+        guard !isPreviewing else { return }
         guard let engineIndex = engineIndex(ofQueuePosition: index) else {
             // Not mirrored (or the engine dropped it) - rebuild from the queue.
             startQueue(at: index)
@@ -360,6 +364,7 @@ extension PlaybackManager {
     }
 
     func queueDidInsert(_ track: Track, at index: Int) {
+        guard !isPreviewing else { return }
         guard !mirror.isEmpty else { return }
         let entryId = AudioEntryId.fresh()
         registerEntry(entryId, track: track, purpose: .ordinary)
@@ -383,6 +388,7 @@ extension PlaybackManager {
     }
 
     func queueDidRemove(at index: Int) {
+        guard !isPreviewing else { return }
         guard mirror.indices.contains(index) else { return }
         // Removing the engine's current entry would make it advance or stop; the
         // callers guard against it, so refuse rather than disturb playback.
@@ -394,6 +400,7 @@ extension PlaybackManager {
     }
 
     func queueDidMove(from source: Int, to destination: Int) {
+        guard !isPreviewing else { return }
         guard mirror.indices.contains(source), mirror.indices.contains(destination) else { return }
         let entry = mirror[source]
         // Read both engine indices before mutating: afterwards the destination slot
@@ -426,6 +433,7 @@ extension PlaybackManager {
     }
 
     func queueDidClear() {
+        guard !isPreviewing else { return }
         mirror = []
         unmirroredTracks = [:]
         injectedNext = nil
@@ -437,6 +445,7 @@ extension PlaybackManager {
     /// restart the playing track. Returns nil when there is no usable mirror, leaving
     /// the caller to shuffle app-side rather than silently doing nothing.
     func shuffleUpcomingQueueEntries() -> [Track]? {
+        guard !isPreviewing else { return nil }
         guard !mirror.isEmpty else { return nil }
 
         clearInjectedNext()

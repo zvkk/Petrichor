@@ -35,6 +35,7 @@ extension PlaylistManager {
     /// the list the user is looking at; with shuffle on the chosen track leads and the
     /// rest follow in random order.
     private func beginPlayback(of track: Track, in contextTracks: [Track]) {
+        audioPlayer?.cancelPreviewForOrdinaryPlayback()
         guard let index = contextTracks.firstIndex(where: { $0.id == track.id }) else {
             currentQueue = [track]
             currentQueueIndex = 0
@@ -78,6 +79,7 @@ extension PlaylistManager {
     }
 
     func playNextTrack() {
+        guard audioPlayer?.isPreviewing != true else { return }
         guard !currentQueue.isEmpty else {
             createLibraryQueue()
             if !currentQueue.isEmpty {
@@ -109,6 +111,7 @@ extension PlaylistManager {
     }
 
     func playPreviousTrack() {
+        guard audioPlayer?.isPreviewing != true else { return }
         guard !currentQueue.isEmpty else {
             createLibraryQueue()
             return
@@ -142,6 +145,7 @@ extension PlaylistManager {
     // MARK: - Repeat and Shuffle
 
     func toggleShuffle() {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         AppCoordinator.shared?.cancelPlaybackRestoration()
         isShuffleEnabled.toggle()
         Logger.info("Shuffle state changed to: \(isShuffleEnabled)")
@@ -152,6 +156,7 @@ extension PlaylistManager {
     }
 
     func toggleRepeatMode() {
+        audioPlayer?.endPreviewBeforeQueueEdit()
         switch repeatMode {
         case .off: repeatMode = .all
         case .all: repeatMode = .one

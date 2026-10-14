@@ -350,6 +350,12 @@ public class PlaybackEngine: NSObject {
         self.backend.backendDelegate = self
     }
 
+    init(backend: PlaybackBackend) {
+        self.backend = backend
+        super.init()
+        backend.backendDelegate = self
+    }
+
     // MARK: - Playback Control
 
     // MARK: - Queue

@@ -82,7 +82,8 @@ class ScrobbleManager: ObservableObject {
     }
     
     /// Called when a track starts playing - sends "Now Playing" to Last.fm
-    func trackStarted(_ track: Track) {
+    func trackStarted(_ track: Track, purpose: PlaybackPurpose) {
+        guard purpose == .ordinary else { return }
         guard isConnected, isScrobblingEnabled else { return }
         guard track.duration >= LastFM.minimumTrackDuration else {
             Logger.info("Track too short to scrobble (\(track.duration)s)")
@@ -95,7 +96,8 @@ class ScrobbleManager: ObservableObject {
     }
     
     /// Scrobble track on playback completion if it meets duration threshold
-    func trackFinished(_ track: Track) {
+    func trackFinished(_ track: Track, purpose: PlaybackPurpose) {
+        guard purpose == .ordinary else { return }
         guard isConnected, isScrobblingEnabled else { return }
         guard track.duration >= LastFM.minimumTrackDuration else {
             Logger.warning("Track too short to scrobble (\(track.duration)s is less than \(LastFM.minimumTrackDuration)s)")
@@ -113,8 +115,9 @@ class ScrobbleManager: ObservableObject {
     func scrobblingEnabledDuringPlayback() {
         guard let playbackManager = AppCoordinator.shared?.playbackManager,
               playbackManager.isPlaying,
+              playbackManager.currentPlaybackPurpose == .ordinary,
               let track = playbackManager.currentTrack else { return }
-        trackStarted(track)
+        trackStarted(track, purpose: .ordinary)
     }
 
     /// Called when user favorites/unfavorites a track - syncs love status to Last.fm

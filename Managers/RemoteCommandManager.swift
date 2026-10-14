@@ -28,6 +28,12 @@ class RemoteCommandManager {
         ]
     }
 
+    func setQueueNavigationEnabled(_ enabled: Bool) {
+        let center = MPRemoteCommandCenter.shared()
+        center.nextTrackCommand.isEnabled = enabled
+        center.previousTrackCommand.isEnabled = enabled
+    }
+
     // MARK: - Remote Command Center
 
     private func setupRemoteCommandCenter() {
@@ -71,7 +77,7 @@ class RemoteCommandManager {
 
         // Add handler for next track command, refused while streaming: a stream is not a queue member.
         commandCenter.nextTrackCommand.addTarget { [weak playlistManager, weak audioPlayer] _ in
-            guard let playlistManager = playlistManager, audioPlayer?.currentStation == nil else {
+            guard let playlistManager = playlistManager, audioPlayer?.currentStation == nil, audioPlayer?.isPreviewing != true else {
                 return .commandFailed
             }
 
@@ -81,7 +87,7 @@ class RemoteCommandManager {
 
         // Add handler for previous track command
         commandCenter.previousTrackCommand.addTarget { [weak playlistManager, weak audioPlayer] _ in
-            guard let playlistManager = playlistManager, audioPlayer?.currentStation == nil else {
+            guard let playlistManager = playlistManager, audioPlayer?.currentStation == nil, audioPlayer?.isPreviewing != true else {
                 return .commandFailed
             }
 

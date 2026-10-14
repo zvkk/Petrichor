@@ -137,6 +137,7 @@ extension PlaybackManager {
             return
         }
 
+        cancelPreviewForOrdinaryPlayback()
         beginSourceGeneration()
 
         // Forget the track session without touching playlistManager.currentQueue.
@@ -364,6 +365,7 @@ extension PlaybackManager {
                 self.isPlaying = false
                 self.isBuffering = false
             }
+            if self.currentStation == nil, entryId != self.currentEntryId { return }
             if let entryId {
                 self.errorReportedEntryIds.insert(entryId)
                 // Terminal finishes are delivered synchronously after errors and

@@ -414,4 +414,55 @@ final class PreviewSessionTests: XCTestCase {
         XCTAssertTrue(player.unmirroredTracks.isEmpty)
         XCTAssertNil(player.injectedNext)
     }
+    func testPlayPressedDuringEndPreviewReloadIsHonored() async {
+        player.previewSession.begin(track: tracks[1])
+        player.previewSession.end()
+        XCTAssertNotNil(player.pendingPreviewRestore)
+        XCTAssertNil(player.currentFullTrack)
+        player.togglePlayPause()
+        XCTAssertTrue(player.pendingPlayOnRestore)
+        backend.ready()
+        await drain()
+        XCTAssertEqual(backend.currentPlaybackProgress, 37)
+        XCTAssertTrue(backend.events.contains("playA"), "Play requested during restore must resume after restoring position")
+        XCTAssertFalse(player.pendingPlayOnRestore)
+    }
+
+    func testPlayThenPauseDuringEndPreviewReloadRemainsPaused() async {
+        player.previewSession.begin(track: tracks[1])
+        player.previewSession.end()
+        player.togglePlayPause()
+        player.togglePlayPause()
+        backend.ready()
+        await drain()
+        XCTAssertEqual(backend.currentPlaybackProgress, 37)
+        XCTAssertFalse(backend.events.contains("playA"))
+        XCTAssertFalse(player.pendingPlayOnRestore)
+        XCTAssertFalse(player.isPlaying)
+    }
+
+    func testRestoreSeekReplacementCannotResumeNewSession() async {
+        player.previewSession.begin(track: tracks[1])
+        player.previewSession.end()
+        player.togglePlayPause()
+        backend.duringSeek = { [self] in playlists.playTrack(tracks[3]) }
+        backend.ready()
+        await drain()
+        XCTAssertFalse(backend.events.contains("playD"))
+        XCTAssertEqual(player.currentTrack?.url, tracks[3].url)
+        XCTAssertFalse(player.pendingPlayOnRestore)
+    }
+
+    func testFailedRestoreSeekDoesNotResumeOrRetainPlayIntent() async {
+        player.previewSession.begin(track: tracks[1])
+        player.previewSession.end()
+        player.togglePlayPause()
+        backend.seekSucceeds = false
+        backend.ready()
+        await drain()
+        XCTAssertFalse(backend.events.contains("playA"))
+        XCTAssertFalse(player.pendingPlayOnRestore)
+        XCTAssertFalse(player.isPlaying)
+    }
+
 }

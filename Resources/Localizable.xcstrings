@@ -244,9 +244,21 @@
       "Copied tracklist (%lld tracks)": {
         "localizations": {
           "en": {
-            "stringUnit": {
-              "state": "translated",
-              "value": "Copied tracklist (%lld tracks)"
+            "variations": {
+              "plural": {
+                "one": {
+                  "stringUnit": {
+                    "state": "translated",
+                    "value": "Copied tracklist (%lld track)"
+                  }
+                },
+                "other": {
+                  "stringUnit": {
+                    "state": "translated",
+                    "value": "Copied tracklist (%lld tracks)"
+                  }
+                }
+              }
             }
           }
         }
@@ -256,7 +268,29 @@
           "en": {
             "stringUnit": {
               "state": "translated",
-              "value": "Exported %@ (%lld tracks)"
+              "value": "Exported %1$@ (%#@tracks@)"
+            },
+            "substitutions": {
+              "tracks": {
+                "argNum": 2,
+                "formatSpecifier": "lld",
+                "variations": {
+                  "plural": {
+                    "one": {
+                      "stringUnit": {
+                        "state": "translated",
+                        "value": "%arg track"
+                      }
+                    },
+                    "other": {
+                      "stringUnit": {
+                        "state": "translated",
+                        "value": "%arg tracks"
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -264,9 +298,21 @@
       "Choose where to save %lld crate files": {
         "localizations": {
           "en": {
-            "stringUnit": {
-              "state": "translated",
-              "value": "Choose where to save %lld crate files"
+            "variations": {
+              "plural": {
+                "one": {
+                  "stringUnit": {
+                    "state": "translated",
+                    "value": "Choose where to save %lld crate file"
+                  }
+                },
+                "other": {
+                  "stringUnit": {
+                    "state": "translated",
+                    "value": "Choose where to save %lld crate files"
+                  }
+                }
+              }
             }
           }
         }

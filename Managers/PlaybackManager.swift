@@ -333,6 +333,13 @@ class PlaybackManager: NSObject, ObservableObject {
             return
         }
 
+        if pendingPreviewRestore != nil {
+            // End Preview reloads paused. Keep Play/Pause intent until its entry is ready.
+            pendingPlayOnRestore.toggle()
+            isPlaying = pendingPlayOnRestore
+            return
+        }
+
         if isPlaying {
             // Pausing while a restored track is still loading cancels the latched play.
             pendingPlayOnRestore = false
@@ -964,13 +971,8 @@ extension PlaybackManager: AudioPlayerDelegate {
             if newState == .paused, let id = entryId {
                 if self.purpose(for: id) == .preview {
                     self.previewSession.ready(entryID: id)
-                } else if let pending = self.pendingPreviewRestore, pending.entryId == id,
-                          pending.generation == self.sourceGeneration,
-                          player.currentEntryId == id {
-                    self.pendingPreviewRestore = nil
-                    if player.seek(to: pending.position), self.currentEntryId == id {
-                        self.currentTime = pending.position
-                    }
+                } else {
+                    self.finishPreviewRestoration(entryID: id)
                 }
             }
 

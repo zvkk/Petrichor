@@ -16,6 +16,34 @@ final class PreviewPolicyTests: XCTestCase {
             XCTAssertThrowsError(try PreviewPolicy.startSeconds(duration: .nan, fraction: values.0, minSeconds: values.1, maxSeconds: values.2))
         }
     }
+    func testSettingsReaderUsesSharedDefaultsAndPreservesExplicitZero() throws {
+        let suite = "PreviewSettingsTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        XCTAssertEqual(PreviewSettings.load(from: defaults), .defaults)
+        defaults.set(0.0, forKey: PreviewSettings.Keys.fraction)
+        defaults.set(0.0, forKey: PreviewSettings.Keys.minSeconds)
+        defaults.set(0.0, forKey: PreviewSettings.Keys.maxSeconds)
+        let settings = PreviewSettings.load(from: defaults)
+        XCTAssertEqual(settings, PreviewSettings(fraction: 0, minSeconds: 0, maxSeconds: 0))
+        XCTAssertTrue(settings.isValid)
+        XCTAssertEqual(settings.startSeconds(duration: 300), 0)
+    }
+
+    func testInvalidPersistedSettingsHaveSafePlaybackAndValidControlDefaults() throws {
+        let suite = "PreviewSettingsTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(100.0, forKey: PreviewSettings.Keys.minSeconds)
+        defaults.set(75.0, forKey: PreviewSettings.Keys.maxSeconds)
+        let settings = PreviewSettings.load(from: defaults)
+        XCTAssertFalse(settings.isValid)
+        XCTAssertEqual(settings.minSeconds, 100)
+        XCTAssertEqual(settings.startSeconds(duration: 300), 0)
+        XCTAssertEqual(settings.validOrDefault, .defaults)
+        XCTAssertEqual(settings.validOrDefault.startSeconds(duration: 300), 60)
+    }
+
     private func start(_ duration: Double) throws -> Double {
         try PreviewPolicy.startSeconds(duration: duration, fraction: 0.2, minSeconds: 20, maxSeconds: 75)
     }

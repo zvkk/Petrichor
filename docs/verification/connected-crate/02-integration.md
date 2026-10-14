@@ -46,3 +46,11 @@ Naming, Preview, text export and Rekordbox export retain their separate live gat
 ## Test-host correction
 
 The export worker's first executed test omitted the host override and selected the existing development container. The log showed session restoration/preparation. Primary read-only checks found the installed app process unchanged, SQLite integrity intact, and DB/WAL/session timestamps predating that test; no persisted library/session writes were detected. No pre-test hashes existed, so byte identity is not asserted. No repair was attempted. Correctly isolated final worker and primary tests are the accepted verification evidence; detailed account remains in02-exports.md.
+
+## Follow-up review fixes — 14 October 2026
+
+Fixed the confirmed End-preview/Play race: Play/Pause intent is retained while the ordinary entry reloads, consumed after a successful restore seek, and discarded on replacement. Added regression coverage for immediate Play, Play then Pause, failed seek, and replacement during seek. Preview engine transitions now live in cohesive PlaybackManager operations; PreviewSettings owns the preference keys, defaults, persisted reader and validation used by playback/settings. Three export count messages now use catalog plurals, including count-driven substitution for the message containing a crate name.
+
+Full native test build: 69 passed, one existing optional skip, zero failures (70 total). Log: `/private/tmp/crate-plan2-review/fixes-tests.log`. Compiled English catalog runtime checks passed for counts 1 and 2 across all three corrected messages. Pinned SwiftLint remains at the same 11 inherited errors; none introduced. Catalog comparison confirms only the three intended payloads changed. `git diff --check` passes.
+
+No installation or live acceptance performed. The native visual, audible, interaction and Rekordbox gates above remain open.

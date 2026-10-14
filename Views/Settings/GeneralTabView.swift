@@ -5,9 +5,9 @@ struct GeneralTabView: View {
     @EnvironmentObject var libraryManager: LibraryManager
     @EnvironmentObject var playbackManager: PlaybackManager
 
-    @AppStorage("previewFraction") private var previewFraction = 0.2
-    @AppStorage("previewMinSeconds") private var previewMinSeconds = 20.0
-    @AppStorage("previewMaxSeconds") private var previewMaxSeconds = 75.0
+    @AppStorage(PreviewSettings.Keys.fraction) private var previewFraction = PreviewSettings.defaults.fraction
+    @AppStorage(PreviewSettings.Keys.minSeconds) private var previewMinSeconds = PreviewSettings.defaults.minSeconds
+    @AppStorage(PreviewSettings.Keys.maxSeconds) private var previewMaxSeconds = PreviewSettings.defaults.maxSeconds
 
     @State private var crossfadeEnabled = false
     @State private var crossfadeDuration: TimeInterval = 3.0
@@ -36,22 +36,20 @@ struct GeneralTabView: View {
     @AppStorage("automaticUpdatesEnabled")
     private var automaticUpdatesEnabled = true
 
-    private var validPreviewSettings: (fraction: Double, min: Double, max: Double) {
-        guard (try? PreviewPolicy.startSeconds(duration: 300, fraction: previewFraction,
-            minSeconds: previewMinSeconds, maxSeconds: previewMaxSeconds)) != nil else {
-            return (0.2, 20, 75)
-        }
-        return (previewFraction, previewMinSeconds, previewMaxSeconds)
+    private var previewSettings: PreviewSettings {
+        PreviewSettings(fraction: previewFraction, minSeconds: previewMinSeconds, maxSeconds: previewMaxSeconds)
     }
+
+    private var validPreviewSettings: PreviewSettings { previewSettings.validOrDefault }
 
     private func updatePreviewSettings(fraction: Double? = nil, min: Double? = nil, max: Double? = nil) {
         let old = validPreviewSettings
-        let next = (fraction ?? old.fraction, min ?? old.min, max ?? old.max)
-        guard (try? PreviewPolicy.startSeconds(duration: 300, fraction: next.0,
-            minSeconds: next.1, maxSeconds: next.2)) != nil else { return }
-        previewFraction = next.0
-        previewMinSeconds = next.1
-        previewMaxSeconds = next.2
+        let next = PreviewSettings(fraction: fraction ?? old.fraction,
+            minSeconds: min ?? old.minSeconds, maxSeconds: max ?? old.maxSeconds)
+        guard next.isValid else { return }
+        previewFraction = next.fraction
+        previewMinSeconds = next.minSeconds
+        previewMaxSeconds = next.maxSeconds
     }
 
     var body: some View {
@@ -89,10 +87,11 @@ struct GeneralTabView: View {
             Section("Playback") {
                 Stepper("Preview start: \(String(format: "%.0f", validPreviewSettings.fraction * 100))%",
                         value: Binding(get: { validPreviewSettings.fraction }, set: { updatePreviewSettings(fraction: $0) }), in: 0...1, step: 0.05)
-                Stepper("Preview minimum: \(String(format: "%.0f", validPreviewSettings.min)) seconds",
-                        value: Binding(get: { validPreviewSettings.min }, set: { updatePreviewSettings(min: $0) }), in: 0...validPreviewSettings.max, step: 5)
-                Stepper("Preview maximum: \(String(format: "%.0f", validPreviewSettings.max)) seconds",
-                        value: Binding(get: { validPreviewSettings.max }, set: { updatePreviewSettings(max: $0) }), in: validPreviewSettings.min...max(600, validPreviewSettings.max), step: 5)
+                Stepper("Preview minimum: \(String(format: "%.0f", validPreviewSettings.minSeconds)) seconds",
+                        value: Binding(get: { validPreviewSettings.minSeconds }, set: { updatePreviewSettings(min: $0) }), in: 0...validPreviewSettings.maxSeconds, step: 5)
+                Stepper("Preview maximum: \(String(format: "%.0f", validPreviewSettings.maxSeconds)) seconds",
+                        value: Binding(get: { validPreviewSettings.maxSeconds }, set: { updatePreviewSettings(max: $0) }),
+                        in: validPreviewSettings.minSeconds...max(600, validPreviewSettings.maxSeconds), step: 5)
 
                 Toggle("Crossfade tracks", isOn: $crossfadeEnabled)
                     .help("Fades one track out as the next fades in")
@@ -123,9 +122,11 @@ struct GeneralTabView: View {
         .scrollDisabled(false)
         .padding(5)
         .onAppear {
-            if (try? PreviewPolicy.startSeconds(duration: 300, fraction: previewFraction,
-                    minSeconds: previewMinSeconds, maxSeconds: previewMaxSeconds)) == nil {
-                previewFraction = 0.2; previewMinSeconds = 20; previewMaxSeconds = 75
+            if !previewSettings.isValid {
+                let fallback = PreviewSettings.defaults
+                previewFraction = fallback.fraction
+                previewMinSeconds = fallback.minSeconds
+                previewMaxSeconds = fallback.maxSeconds
             }
             crossfadeEnabled = playbackManager.isCrossfadeEnabled()
 

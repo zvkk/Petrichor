@@ -30,7 +30,10 @@ class AppCoordinator: ObservableObject {
         scrobbleManager = ScrobbleManager()
 
         Self.shared = self
-        Task { @MainActor in DropboxPlaylistSyncCoordinator.shared.scheduleSync() }
+        Task { @MainActor in
+            PublicationCoordinator.shared.configure(libraryManager.databaseManager)
+            DropboxPlaylistSyncCoordinator.shared.scheduleSync()
+        }
 
         InternetRadioManager.shared.prepareForLaunch(
             stations: libraryManager.databaseManager.loadStationSummaries()

@@ -30,7 +30,8 @@ enum DropboxSyncVault {
         guard status == errSecSuccess, let data = result as? Data else { throw PlaylistSyncError.authentication }
         return try JSONDecoder().decode(DropboxSyncCredentials.self, from: data)
     }
-    static func save(_ credentials: DropboxSyncCredentials) throws {
+    static func save(_ credentials: DropboxSyncCredentials, replacingConnection: Bool = true) throws {
+        if replacingConnection { PublicationConnectionEpoch.shared.invalidate() }
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrAccount as String: key]
         let data = try JSONEncoder().encode(credentials)
         let status = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
@@ -42,6 +43,7 @@ enum DropboxSyncVault {
         } else if status != errSecSuccess { throw PlaylistSyncError.authentication }
     }
     static func disconnect() throws {
+        PublicationConnectionEpoch.shared.invalidate()
         let status = SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrAccount as String: key] as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else { throw PlaylistSyncError.authentication }
     }
@@ -130,12 +132,15 @@ final class DropboxPlaylistAuthentication: NSObject, ASWebAuthenticationPresenta
         return DropboxSyncCredentials(accessToken: access, refreshToken: refresh, expiresAt: Date().addingTimeInterval(expires))
     }
     func credentials(forceRefresh: Bool = false) async throws -> DropboxSyncCredentials {
+        let epoch = PublicationConnectionEpoch.shared.current()
         guard var credentials = try DropboxSyncVault.load() else { throw PlaylistSyncError.authentication }
         if forceRefresh || credentials.expiresAt.timeIntervalSinceNow < 120 {
             guard !appKey.isEmpty else { throw PlaylistSyncError.configuration }
             credentials = try await token(["grant_type": "refresh_token", "refresh_token": credentials.refreshToken, "client_id": appKey], previousRefresh: credentials.refreshToken)
-            try DropboxSyncVault.save(credentials)
+            guard PublicationConnectionEpoch.shared.current() == epoch else { throw PlaylistSyncError.authentication }
+            try DropboxSyncVault.save(credentials, replacingConnection: false)
         }
+        guard PublicationConnectionEpoch.shared.current() == epoch else { throw PlaylistSyncError.authentication }
         return credentials
     }
 }

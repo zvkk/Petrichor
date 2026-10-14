@@ -181,7 +181,11 @@ extension PetrichorApp {
 
     @CommandsBuilder
     private func fileMenuCommands() -> some Commands {
-        CommandGroup(replacing: .saveItem) {}
+        CommandGroup(replacing: .saveItem) {
+            Button("Add to shared music…") {
+                PublicationCoordinator.shared.request(trackIDs: (previewSelection ?? []).compactMap(\.trackId))
+            }.disabled(previewSelection?.isEmpty != false)
+        }
 
         CommandGroup(replacing: .newItem) {
             // New submenu

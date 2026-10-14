@@ -34,24 +34,46 @@ struct DropboxPlaylistSyncSettingsView: View {
 }
 
 /// Quiet metadata beside the existing crate information; its sheet owns recovery actions.
+private struct RequestSharedMusicPublicationKey: EnvironmentKey {
+    static let defaultValue: ([Int64]) -> Void = { ids in
+        Task { @MainActor in PublicationCoordinator.shared.request(trackIDs: ids) }
+    }
+}
+extension EnvironmentValues {
+    var requestSharedMusicPublication: ([Int64]) -> Void {
+        get { self[RequestSharedMusicPublicationKey.self] }
+        set { self[RequestSharedMusicPublicationKey.self] = newValue }
+    }
+}
+
 struct SharedCrateStatusButton: View {
     let playlistID: UUID
     @ObservedObject private var sync = DropboxPlaylistSyncCoordinator.shared
     @State private var showingDetails = false
+    @State private var pendingTrackIDs: [Int64]?
+    @Environment(\.requestSharedMusicPublication) private var requestPublication
     var body: some View {
         Button(sync.summary(for: playlistID)) { showingDetails = true }
             .buttonStyle(.plain)
             .font(.caption).foregroundStyle(.secondary)
             .help("Crate connection details")
             .onAppear { sync.refreshStatus() }
-            .sheet(isPresented: $showingDetails) {
-                SharedCrateDetails(playlistID: playlistID)
+            .sheet(isPresented: $showingDetails, onDismiss: {
+                guard let ids = pendingTrackIDs else { return }
+                pendingTrackIDs = nil
+                requestPublication(ids)
+            }) {
+                SharedCrateDetails(playlistID: playlistID, addToSharedMusic: { ids in
+                    pendingTrackIDs = ids
+                    showingDetails = false
+                })
             }
     }
 }
 
 private struct SharedCrateDetails: View {
     let playlistID: UUID
+    let addToSharedMusic: ([Int64]) -> Void
     @ObservedObject private var sync = DropboxPlaylistSyncCoordinator.shared
     @Environment(\.dismiss) private var dismiss
     private var state: SyncPlaylistState? { sync.states.first { $0.localID == playlistID } }
@@ -66,8 +88,11 @@ private struct SharedCrateDetails: View {
                 }
                 if CrateSyncPresentation.needsAdding(state) > 0 {
                     Text("\(CrateSyncPresentation.needsAdding(state)) tracks need adding to shared music")
-                    Text("Add these recordings to your paired Dropbox music folder, then sync again.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text("Review stale members if the recording was replaced or moved.").font(.caption).foregroundStyle(.secondary)
+                    Button("Add to shared music…") {
+                        let ids = members.filter { $0.fileId == nil }.compactMap(\.localTrackID)
+                        addToSharedMusic(ids)
+                    }
                 }
                 if members.contains(where: { $0.localTrackID == nil || $0.fileId == nil }) {
                     ScrollView {
